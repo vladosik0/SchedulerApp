@@ -3,6 +3,7 @@ package com.vladosik0.schedulerapp.presentation.screens
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -100,7 +101,7 @@ fun DateScreen(navController: NavController) {
     var selectedPriorities by remember { mutableStateOf(setOf<Priority>()) }
     var selectedDifficulties by remember { mutableStateOf(setOf<Difficulty>()) }
     var selectedCategories by remember { mutableStateOf(setOf<String>()) }
-    var selectedTimelineEvents by remember { mutableStateOf(setOf<TimelineEvents>()) }
+    var selectedTimelineEvents by remember { mutableStateOf(setOf<TimelineEvents>(TimelineEvents.TASKS)) }
 
 
     var filtersExpanded by remember { mutableStateOf(false) }
@@ -167,24 +168,24 @@ fun DateScreen(navController: NavController) {
                     selectedTimelineEvents = selectedTimelineEvents,
                     categories = distinctCategories,
                     onPrioritySelected = { priority ->
-                        selectedPriorities = if (selectedPriorities.contains(priority)) {
-                            selectedPriorities - priority
-                        } else {
+                        selectedPriorities = if (!selectedPriorities.contains(priority) && areOnlyTasksPicked(selectedTimelineEvents)) {
                             selectedPriorities + priority
+                        } else {
+                            selectedPriorities - priority
                         }
                     },
                     onDifficultySelected = { difficulty ->
-                        selectedDifficulties = if (selectedDifficulties.contains(difficulty)) {
-                            selectedDifficulties - difficulty
-                        } else {
+                        selectedDifficulties = if (!selectedDifficulties.contains(difficulty) && areOnlyTasksPicked(selectedTimelineEvents)) {
                             selectedDifficulties + difficulty
+                        } else {
+                            selectedDifficulties - difficulty
                         }
                     },
                     onCategorySelected = { category ->
-                        selectedCategories = if (selectedCategories.contains(category)) {
-                            selectedCategories - category
-                        } else {
+                        selectedCategories = if (!selectedCategories.contains(category) && areOnlyTasksPicked(selectedTimelineEvents)) {
                             selectedCategories + category
+                        } else {
+                            selectedCategories - category
                         }
                     },
                     onTimelineEventSelected = { timelineEvent ->
@@ -300,6 +301,10 @@ enum class Priority(val value: Int) {
     HIGH(2)
 }
 
+private fun areOnlyTasksPicked(selectedTimelineEvents: Set<TimelineEvents>): Boolean {
+    return TimelineEvents.TASKS in selectedTimelineEvents && TimelineEvents.FREE_SLOTS !in selectedTimelineEvents
+}
+
 // --- Task data class ---
 data class Task(
     val id: Int,
@@ -357,6 +362,7 @@ sealed class TimelineElement {
 }
 
 // --- Timeline List View ---
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TimelineListView(
     tasks: List<Task>,
@@ -379,31 +385,46 @@ fun TimelineListView(
         buildTimelineElements(tasks, currentTime.value, selectedDate)
     }
 
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(timelineElements.filter {
+    val filteredElements = remember(timelineElements, filter) {
+        timelineElements.filter {
             when {
-                TimelineEvents.TASKS in filter && TimelineEvents.FREE_SLOTS !in filter -> it is TimelineElement.TaskElement || it is TimelineElement.NowMarker
-                TimelineEvents.FREE_SLOTS in filter && TimelineEvents.TASKS !in filter -> it is TimelineElement.FreeSlot || it is TimelineElement.NowMarker
+                TimelineEvents.TASKS in filter && TimelineEvents.FREE_SLOTS !in filter ->
+                    it is TimelineElement.TaskElement || it is TimelineElement.NowMarker
+                TimelineEvents.FREE_SLOTS in filter && TimelineEvents.TASKS !in filter ->
+                    it is TimelineElement.FreeSlot || it is TimelineElement.NowMarker
                 else -> true
             }
-        }) { element ->
-            when (element) {
-                is TimelineElement.TaskElement -> TaskItem(
-                    element.task,
-                    element.status,
-                    onClick = { onTaskClick(element.task) }
-                )
-                is TimelineElement.FreeSlot -> FreeSlotItem(
-                    startAt = element.start,
-                    finishAt = element.end,
-                    status = element.status,
-                    onClick = {}
-                )
-                TimelineElement.NowMarker -> if (today == selectedDate) NowMarker()
+        }
+    }
+
+    AnimatedContent(
+        targetState = filteredElements,
+        transitionSpec = {
+            (fadeIn(tween(300)) + slideInVertically { it }) togetherWith
+                    (fadeOut(tween(300)) + slideOutVertically { it })
+        },
+        label = "Timeline Filter Animation"
+    ) { animatedElements ->
+        LazyColumn(
+            modifier = modifier,
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(animatedElements) { element ->
+                when (element) {
+                    is TimelineElement.TaskElement -> TaskItem(
+                        element.task,
+                        element.status,
+                        onClick = { onTaskClick(element.task) }
+                    )
+                    is TimelineElement.FreeSlot -> FreeSlotItem(
+                        startAt = element.start,
+                        finishAt = element.end,
+                        status = element.status,
+                        onClick = {}
+                    )
+                    TimelineElement.NowMarker -> if (today == selectedDate) NowMarker()
+                }
             }
         }
     }
