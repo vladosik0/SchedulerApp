@@ -100,6 +100,8 @@ fun DateScreen(navController: NavController) {
     var selectedPriorities by remember { mutableStateOf(setOf<Priority>()) }
     var selectedDifficulties by remember { mutableStateOf(setOf<Difficulty>()) }
     var selectedCategories by remember { mutableStateOf(setOf<String>()) }
+    var selectedTimelineEvents by remember { mutableStateOf(setOf<TimelineEvents>()) }
+
 
     var filtersExpanded by remember { mutableStateOf(false) }
 
@@ -162,6 +164,7 @@ fun DateScreen(navController: NavController) {
                     selectedPriorities = selectedPriorities,
                     selectedDifficulties = selectedDifficulties,
                     selectedCategories = selectedCategories,
+                    selectedTimelineEvents = selectedTimelineEvents,
                     categories = distinctCategories,
                     onPrioritySelected = { priority ->
                         selectedPriorities = if (selectedPriorities.contains(priority)) {
@@ -183,10 +186,18 @@ fun DateScreen(navController: NavController) {
                         } else {
                             selectedCategories + category
                         }
-                    })
+                    },
+                    onTimelineEventSelected = { timelineEvent ->
+                        selectedTimelineEvents = if (selectedTimelineEvents.contains(timelineEvent)) {
+                            selectedTimelineEvents - timelineEvent
+                        } else {
+                            selectedTimelineEvents + timelineEvent
+                        }
+                    },
+                )
             }
             Text(
-                text = "Tasks",
+                text = "Schedule",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp, top = 8.dp)
@@ -202,10 +213,13 @@ fun DateScreen(navController: NavController) {
                 TimelineListView(
                     tasks = tasks,
                     selectedDate = selectedDate,
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    filter = selectedTimelineEvents,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                     onTaskClick = { task ->
                         navController.navigate(NavigationRoutes.TaskDetailsScreen.createRoute(task.id))
-                    }
+                    },
                 )
             }
         }
@@ -307,30 +321,38 @@ private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 private fun parseTime(time: String): LocalTime = LocalTime.parse(time, timeFormatter)
 
 // --- Check task status ---
-private fun getTaskStatus(task: Task, now: LocalTime, selectedDate: LocalDate): TaskStatus {
-    val start = parseTime(task.startAt)
-    val end = parseTime(task.finishAt)
+private fun getEventStatus(startAt: String, finishAt: String, now: LocalTime, selectedDate: LocalDate): EventStatus {
+    val start = parseTime(startAt)
+    val end = parseTime(finishAt)
 
     return when {
-        selectedDate.isBefore(LocalDate.now()) -> TaskStatus.PAST
-        selectedDate.isAfter(LocalDate.now()) -> TaskStatus.FUTURE
-        now.isBefore(start) -> TaskStatus.FUTURE
-        now.isAfter(end) -> TaskStatus.PAST
-        else -> TaskStatus.CURRENT
+        selectedDate.isBefore(LocalDate.now()) -> EventStatus.PAST
+        selectedDate.isAfter(LocalDate.now()) -> EventStatus.FUTURE
+        now.isBefore(start) -> EventStatus.FUTURE
+        now.isAfter(end) -> EventStatus.PAST
+        else -> EventStatus.CURRENT
     }
 }
 
 // --- Format enum names ---
 private fun String.toPrettyFormat(): String {
-    return this.lowercase().replaceFirstChar { it.uppercase() }
+    return this.lowercase()
+        .split('_')
+        .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 }
 
 // --- Enum for current status of tasks ---
-enum class TaskStatus { PAST, CURRENT, FUTURE }
+enum class EventStatus { PAST, CURRENT, FUTURE }
+
+// --- Enum for Timeline filter ---
+enum class TimelineEvents() {
+    TASKS, FREE_SLOTS
+}
 
 // --- Class for timeline elements ---
 sealed class TimelineElement {
-    data class TaskElement(val task: Task, val status: TaskStatus) : TimelineElement()
+    data class TaskElement(val task: Task, val status: EventStatus) : TimelineElement()
+    data class FreeSlot(val start: String, val end: String, val status: EventStatus) : TimelineElement()
     object NowMarker : TimelineElement()
 }
 
@@ -339,6 +361,7 @@ sealed class TimelineElement {
 fun TimelineListView(
     tasks: List<Task>,
     selectedDate: LocalDate,
+    filter: Set<TimelineEvents>,
     modifier: Modifier = Modifier,
     onTaskClick: (Task) -> Unit
 ) {
@@ -361,15 +384,77 @@ fun TimelineListView(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(timelineElements) { element ->
+        items(timelineElements.filter {
+            when {
+                TimelineEvents.TASKS in filter && TimelineEvents.FREE_SLOTS !in filter -> it is TimelineElement.TaskElement || it is TimelineElement.NowMarker
+                TimelineEvents.FREE_SLOTS in filter && TimelineEvents.TASKS !in filter -> it is TimelineElement.FreeSlot || it is TimelineElement.NowMarker
+                else -> true
+            }
+        }) { element ->
             when (element) {
                 is TimelineElement.TaskElement -> TaskItem(
                     element.task,
                     element.status,
                     onClick = { onTaskClick(element.task) }
                 )
+                is TimelineElement.FreeSlot -> FreeSlotItem(
+                    startAt = element.start,
+                    finishAt = element.end,
+                    status = element.status,
+                    onClick = {}
+                )
                 TimelineElement.NowMarker -> if (today == selectedDate) NowMarker()
             }
+        }
+    }
+}
+
+@Composable
+fun FreeSlotItem(
+    startAt: String,
+    finishAt: String,
+    status: EventStatus,
+    onClick: () -> Unit
+) {
+    val color = when (status) {
+        EventStatus.PAST -> MaterialTheme.colorScheme.primaryContainer
+        EventStatus.CURRENT -> MaterialTheme.colorScheme.error
+        EventStatus.FUTURE -> MaterialTheme.colorScheme.primary
+    }
+
+    Row(
+        verticalAlignment = Alignment.Top,
+        modifier = Modifier.clickable { onClick() }
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(60.dp)
+                    .background(isPast(status))
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "$startAt - $finishAt",
+                fontSize = 12.sp,
+                color = isPast(status)
+            )
+            Text(
+                "Free time slot available",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = isPast(status)
+            )
         }
     }
 }
@@ -379,22 +464,29 @@ fun TaskFiltersRow(
     selectedPriorities: Set<Priority>,
     selectedDifficulties: Set<Difficulty>,
     selectedCategories: Set<String>,
+    selectedTimelineEvents: Set<TimelineEvents>,
     categories: List<String>,
     onPrioritySelected: (Priority) -> Unit,
     onDifficultySelected: (Difficulty) -> Unit,
     onCategorySelected: (String) -> Unit,
+    onTimelineEventSelected:(TimelineEvents) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val priorities = Priority.entries.toTypedArray()
     val difficulties = Difficulty.entries.toTypedArray()
+    val timelineEvents = TimelineEvents.entries.toTypedArray()
 
     var showPriorityFilters by remember { mutableStateOf(false) }
     var showDifficultyFilters by remember { mutableStateOf(false) }
     var showCategoryFilters by remember { mutableStateOf(false) }
+    var showTimelineEventFilters by remember { mutableStateOf(false) }
+
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    Column(modifier = modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp)) {
         FilterLabel(
             text = "Priority",
             expanded = showPriorityFilters,
@@ -449,6 +541,26 @@ fun TaskFiltersRow(
                         onCategorySelected(category)
                     },
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        FilterLabel(
+            text = "Timeline Events",
+            expanded = showTimelineEventFilters,
+            onClick = { showTimelineEventFilters = !showTimelineEventFilters }
+        )
+        AnimatedVisibility(visible = showTimelineEventFilters) {
+            FilterContainer {
+                FilterChipRow(
+                    items = timelineEvents.map{ it.name },
+                    selectedItems = selectedTimelineEvents.map{ it.name }.toSet(),
+                    onItemSelected = { name ->
+                        val timelineEvent = TimelineEvents.valueOf(name)
+                        onTimelineEventSelected(timelineEvent)
+                    }
                 )
             }
         }
@@ -541,19 +653,66 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
     val result = mutableListOf<TimelineElement>()
     var nowMarkerPlaced = false
 
+    val dayStart = LocalTime.MIDNIGHT
+    val dayEnd = LocalTime.of(23, 59)
+
+
+    if (sortedTasks.isNotEmpty()) {
+        val firstStart = parseTime(sortedTasks.first().startAt)
+        if (dayStart < firstStart) {
+            val eventStatus = getEventStatus(dayStart.toString(), firstStart.toString(), now, selectedDate)
+            result.add(
+                TimelineElement.FreeSlot(
+                    start = dayStart.toString(),
+                    end = firstStart.toString(),
+                    status = eventStatus
+                )
+            )
+        }
+    }
+
+    var previousEndTime: LocalTime? = null
+
     for (task in sortedTasks) {
-        if (!nowMarkerPlaced && now.isBefore(parseTime(task.startAt))) {
+        val taskStart = parseTime(task.startAt)
+        val taskEnd = parseTime(task.finishAt)
+
+        if (previousEndTime != null && previousEndTime < taskStart) {
+            val eventStatus = getEventStatus(previousEndTime.toString(), taskStart.toString(), now, selectedDate)
+            result.add(
+                TimelineElement.FreeSlot(
+                    start = previousEndTime.toString(),
+                    end = taskStart.toString(),
+                    status = eventStatus
+                )
+            )
+        }
+
+        if (!nowMarkerPlaced && now.isBefore(taskStart)) {
             result.add(TimelineElement.NowMarker)
             nowMarkerPlaced = true
         }
 
-        val status = getTaskStatus(task, now, selectedDate)
+        val status = getEventStatus(task.startAt, task.finishAt, now, selectedDate)
         result.add(TimelineElement.TaskElement(task, status))
 
-        if (status == TaskStatus.CURRENT && !nowMarkerPlaced) {
+        if (status == EventStatus.CURRENT && !nowMarkerPlaced) {
             result.add(TimelineElement.NowMarker)
             nowMarkerPlaced = true
         }
+
+        previousEndTime = maxOf(previousEndTime ?: taskEnd, taskEnd)
+    }
+
+    if (previousEndTime != null && previousEndTime < dayEnd) {
+        val eventStatus = getEventStatus(previousEndTime.toString(), dayEnd.toString(), now, selectedDate)
+        result.add(
+            TimelineElement.FreeSlot(
+                start = previousEndTime.toString(),
+                end = dayEnd.toString(),
+                status = eventStatus
+            )
+        )
     }
 
     if (!nowMarkerPlaced) {
@@ -566,13 +725,13 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
 @Composable
 fun TaskItem(
     task: Task,
-    status: TaskStatus,
+    status: EventStatus,
     onClick: () -> Unit
 ) {
     val color = when (status) {
-        TaskStatus.PAST -> MaterialTheme.colorScheme.primaryContainer
-        TaskStatus.CURRENT -> MaterialTheme.colorScheme.error
-        TaskStatus.FUTURE -> MaterialTheme.colorScheme.primary
+        EventStatus.PAST -> MaterialTheme.colorScheme.primaryContainer
+        EventStatus.CURRENT -> MaterialTheme.colorScheme.error
+        EventStatus.FUTURE -> MaterialTheme.colorScheme.primary
     }
 
     Row(
@@ -656,8 +815,8 @@ fun TaskItem(
 }
 
 @Composable
-private fun isPast(status: TaskStatus): Color{
-    return if (status != TaskStatus.PAST) {
+private fun isPast(status: EventStatus): Color{
+    return if (status != EventStatus.PAST) {
         MaterialTheme.colorScheme.onSurface
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant

@@ -1,6 +1,5 @@
 package com.vladosik0.schedulerapp.presentation.screens
 
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
@@ -58,11 +57,8 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.rememberNavController
 import com.vladosik0.schedulerapp.R
-import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -205,7 +201,7 @@ fun TaskDetailsScreen(
                     TaskDetailRow(
                         icon = painterResource(R.drawable.status),
                         label = "Status",
-                        value = getTaskStatus(task.startAt, task.finishAt)
+                        value = getEventStatus(task.startAt, task.finishAt)
                     )
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -294,7 +290,7 @@ fun SmallActionButton(
     }
 }
 
-private fun getTaskStatus(startAt: String, finishAt: String): String {
+private fun getEventStatus(startAt: String, finishAt: String): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val now = LocalTime.now()
     val startTime = LocalTime.parse(startAt, formatter)
@@ -306,11 +302,12 @@ private fun getTaskStatus(startAt: String, finishAt: String): String {
         else -> "In Process"
     }
 }
-@Preview(showBackground = true)
-@Composable
-fun DetailsScreenPreview() {
-    SchedulerAppTheme {
-        val navController = rememberNavController()
-        TaskDetailsScreen(1) { navController.popBackStack() }
-    }
-}
+
+//@Preview(showBackground = true)
+//@Composable
+//fun DetailsScreenPreview() {
+//    SchedulerAppTheme {
+//        val navController = rememberNavController()
+//        TaskDetailsScreen(1) { navController.popBackStack() }
+//    }
+//}
