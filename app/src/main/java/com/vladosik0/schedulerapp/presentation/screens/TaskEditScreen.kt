@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -198,6 +199,7 @@ fun TaskEditScreen(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Image(
                     painter = painterResource(R.drawable.notification),
                     contentDescription = if (notificationsExpanded) "Collapse Notifications" else "Expand Notifications",
@@ -350,7 +352,7 @@ fun NotificationSettings(
 
         AnimatedVisibility(visible = periodicNotificationsExpanded) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Select Period:", modifier = Modifier.padding(end = 8.dp))
+                Text("Select Period:", modifier = Modifier.padding(start = 16.dp, end = 8.dp))
                 Box {
                     OutlinedButton(onClick = { periodicDropdownExpanded = true }) {
                         Text(selectedPeriodic?.let { "Every $it hours" } ?: "None")
@@ -390,7 +392,6 @@ fun NotificationSettings(
                         }
                     }
                 }
-
                 DatePickerField(
                     selectedDate = selectedDate ?: LocalDate.now(),
                     onDateSelected = { selectedDate = it })
@@ -404,16 +405,21 @@ fun NotificationSettings(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
-                    onClick = {
-                        if (selectedDate != null && selectedTime != null) {
-                            onAddCustomTime(LocalDateTime.of(selectedDate!!, selectedTime!!))
-                            selectedDate = null
-                            selectedTime = null
-                        }
-                    }, enabled = selectedDate != null && selectedTime != null
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Add Custom Time")
+                    Button(
+                        onClick = {
+                            if (selectedDate != null && selectedTime != null) {
+                                onAddCustomTime(LocalDateTime.of(selectedDate!!, selectedTime!!))
+                                selectedDate = null
+                                selectedTime = null
+                            }
+                        }, enabled = selectedDate != null && selectedTime != null
+                    ) {
+                        Text("Add Custom Time")
+                    }
                 }
             }
         }
