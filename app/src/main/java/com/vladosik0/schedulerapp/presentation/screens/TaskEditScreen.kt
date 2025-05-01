@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -51,9 +52,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -337,14 +340,17 @@ fun TimePickerField(
 
 @Composable
 fun NotificationSettings(
-    periodicOptions: List<Int> = listOf(12, 24, 48),
-    selectedPeriodic: Int? = null,
+    startAt: LocalDateTime = LocalDateTime.now(),
+    finishAt: LocalDateTime = LocalDateTime.now(),
     onPeriodicChange: (Int?) -> Unit = {},
     customTimes: List<LocalDateTime> = listOf<LocalDateTime>(),
     onAddCustomTime: (LocalDateTime) -> Unit = {},
     onRemoveCustomTime: (LocalDateTime) -> Unit = {}
 ) {
-    var periodicDropdownExpanded by remember { mutableStateOf(false) }
+    val units = listOf("Minutes", "Hours", "Days", "Weeks")
+    var selectedUnit by remember { mutableStateOf("Hours") }
+    var customValue by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedTime by remember { mutableStateOf<LocalTime?>(null) }
     var customNotificationsExpanded by remember { mutableStateOf(false) }
@@ -357,22 +363,59 @@ fun NotificationSettings(
         ) { periodicNotificationsExpanded = !periodicNotificationsExpanded}
 
         AnimatedVisibility(visible = periodicNotificationsExpanded) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Select Period:", modifier = Modifier.padding(start = 16.dp, end = 8.dp))
-                Box {
-                    OutlinedButton(onClick = { periodicDropdownExpanded = true }) {
-                        Text(selectedPeriodic?.let { "Every $it hours" } ?: "None")
-                    }
-                    DropdownMenu(expanded = periodicDropdownExpanded, onDismissRequest = { periodicDropdownExpanded = false }) {
-                        periodicOptions.forEach { hours ->
-                            DropdownMenuItem(
-                                text = { Text("Every $hours hours") },
-                                onClick = {
-                                    onPeriodicChange(hours)
-                                    periodicDropdownExpanded = false
-                                })
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = customValue,
+                        onValueChange = { customValue = it },
+                        label = { Text("Value") },
+                        singleLine = true,
+                        modifier = Modifier.width(80.dp),
+                        isError = errorMessage != null,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    DropdownMenuBox(
+                        options = units,
+                        selected = selectedUnit,
+                        onSelected = { selectedUnit = it })
+                }
+
+                if (errorMessage != null) {
+                    Text(
+                        errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(onClick = {
+                    val value = customValue.toIntOrNull()
+                    if (value == null || value <= 0) {
+                        errorMessage = "Enter a valid number"
+                    } else if (!isPeriodLogical(value, selectedUnit, startAt, finishAt)) {
+                        errorMessage = "Period exceeds task duration"
+                    } else {
+                        errorMessage = null
+                        val totalMinutes = when (selectedUnit) {
+                            "Minutes" -> value
+                            "Hours" -> value * 60
+                            "Days" -> value * 60 * 24
+                            "Weeks" -> value * 60 * 24 * 7
+                            else -> value
                         }
+                        onPeriodicChange(totalMinutes)
                     }
+                }) {
+                    Text("Set Period")
                 }
             }
         }
@@ -430,6 +473,46 @@ fun NotificationSettings(
             }
         }
     }
+}
+
+@Composable
+fun DropdownMenuBox(
+    options: List<String>,
+    selected: String,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(selected)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+private fun isPeriodLogical(value: Int, unit: String, startAt: LocalDateTime, finishAt: LocalDateTime): Boolean {
+    val periodDuration = when (unit) {
+        "Minutes" -> Duration.ofMinutes(value.toLong())
+        "Hours" -> Duration.ofHours(value.toLong())
+        "Days" -> Duration.ofDays(value.toLong())
+        "Weeks" -> Duration.ofDays(value.toLong() * 7)
+        else -> Duration.ZERO
+    }
+
+    val taskDuration = Duration.between(startAt, finishAt)
+
+    return !taskDuration.isNegative && periodDuration <= taskDuration
 }
 
 @Preview(showBackground = true)
