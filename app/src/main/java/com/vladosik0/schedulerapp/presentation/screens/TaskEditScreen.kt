@@ -69,7 +69,6 @@ fun TaskEditScreen(
     initialTask: Task? = null,
     date: LocalDate = LocalDate.now(),
     startAt: String? = null,
-    areNotificationsExpanded: Boolean = true,
     onSave: (Task) -> Unit = {},
     onCancel: () -> Unit = {}
 ) {
@@ -86,7 +85,7 @@ fun TaskEditScreen(
     var date by rememberSaveable {
         mutableStateOf(initialTask?.let { LocalDate.parse(it.startAt.substring(0, 10)) } ?: date)
     }
-    var notificationsExpanded by remember { mutableStateOf(areNotificationsExpanded) }
+    var notificationsExpanded by remember { mutableStateOf(false) }
 
     var startTime by rememberSaveable {
         mutableStateOf(

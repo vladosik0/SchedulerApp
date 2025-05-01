@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,16 +64,9 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
-    taskId: Int,
+    task: Task,
     onBackIconClick: () -> Unit
 ) {
-    val task = sampleTasks.find { it.id == taskId }
-
-    if (task == null) {
-        Text("Task not found")
-        return
-    }
-
     var expanded by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
@@ -124,10 +116,6 @@ fun TaskDetailsScreen(
                             SmallActionButton(
                                 icon = Icons.Default.Delete,
                                 label = "Delete"
-                            ) { /* TODO */ }
-                            SmallActionButton(
-                                icon = Icons.Default.Notifications,
-                                label = "Notify"
                             ) { /* TODO */ }
                             SmallActionButton(
                                 icon = Icons.Default.Check,

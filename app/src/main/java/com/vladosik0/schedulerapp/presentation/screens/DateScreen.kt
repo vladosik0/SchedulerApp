@@ -74,14 +74,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
-import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
@@ -121,7 +118,9 @@ fun DateScreen(navController: NavController) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
+                onClick = {
+                    navController.navigate(NavigationRoutes.TaskCreateScreen.createRoute(selectedDate))
+                },
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer
             ) {
                 Icon(
@@ -884,12 +883,3 @@ val sampleTasks = listOf(
     Task(7, "20:00", "21:00", "Code Review", "Review PRs", "Revaadaiew", 60, Difficulty.HIGH, Priority.LOW),
     Task(8, "20:00", "21:00", "Code Review", "Review PRs", "Revaadaiew", 60, Difficulty.HIGH, Priority.LOW)
 )
-
-@Preview(showBackground = true)
-@Composable
-fun DateScreenPreview() {
-    SchedulerAppTheme {
-        val navController = rememberNavController()
-        TaskDetailsScreen(1) { navController.popBackStack() }
-    }
-}
