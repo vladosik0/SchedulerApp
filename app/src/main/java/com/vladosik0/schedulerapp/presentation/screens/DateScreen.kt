@@ -328,13 +328,13 @@ private fun parseTime(time: String): LocalTime = LocalTime.parse(time, timeForma
 // --- Check task status ---
 private fun getEventStatus(startAt: String, finishAt: String, now: LocalTime, selectedDate: LocalDate): EventStatus {
     val start = parseTime(startAt)
-    val end = parseTime(finishAt)
+    val finish = parseTime(finishAt)
 
     return when {
         selectedDate.isBefore(LocalDate.now()) -> EventStatus.PAST
         selectedDate.isAfter(LocalDate.now()) -> EventStatus.FUTURE
         now.isBefore(start) -> EventStatus.FUTURE
-        now.isAfter(end) -> EventStatus.PAST
+        now.isAfter(finish) -> EventStatus.PAST
         else -> EventStatus.CURRENT
     }
 }
@@ -357,7 +357,7 @@ enum class TimelineEvents() {
 // --- Class for timeline elements ---
 sealed class TimelineElement {
     data class TaskElement(val task: Task, val status: EventStatus) : TimelineElement()
-    data class FreeSlot(val start: String, val end: String, val status: EventStatus) : TimelineElement()
+    data class FreeSlot(val start: String, val finish: String, val status: EventStatus) : TimelineElement()
     object NowMarker : TimelineElement()
 }
 
@@ -419,7 +419,7 @@ fun TimelineListView(
                     )
                     is TimelineElement.FreeSlot -> FreeSlotItem(
                         startAt = element.start,
-                        finishAt = element.end,
+                        finishAt = element.finish,
                         status = element.status,
                         onClick = {}
                     )
@@ -685,7 +685,7 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
             result.add(
                 TimelineElement.FreeSlot(
                     start = dayStart.toString(),
-                    end = firstStart.toString(),
+                    finish = firstStart.toString(),
                     status = eventStatus
                 )
             )
@@ -703,7 +703,7 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
             result.add(
                 TimelineElement.FreeSlot(
                     start = previousEndTime.toString(),
-                    end = taskStart.toString(),
+                    finish = taskStart.toString(),
                     status = eventStatus
                 )
             )
@@ -730,7 +730,7 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
         result.add(
             TimelineElement.FreeSlot(
                 start = previousEndTime.toString(),
-                end = dayEnd.toString(),
+                finish = dayEnd.toString(),
                 status = eventStatus
             )
         )
