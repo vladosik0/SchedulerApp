@@ -220,6 +220,9 @@ fun DateScreen(navController: NavController) {
                     onTaskClick = { task ->
                         navController.navigate(NavigationRoutes.TaskDetailsScreen.createRoute(task.id))
                     },
+                    onFreeSlotClick = { startAt ->
+                        navController.navigate(NavigationRoutes.TaskCreateForFreeSlotScreen.createRoute(startAt))
+                    }
                 )
             }
         }
@@ -368,7 +371,8 @@ fun TimelineListView(
     selectedDate: LocalDate,
     filter: Set<TimelineEvents>,
     modifier: Modifier = Modifier,
-    onTaskClick: (Task) -> Unit
+    onTaskClick: (Task) -> Unit,
+    onFreeSlotClick: (String?) -> Unit
 ) {
     val currentTime = remember { mutableStateOf(LocalTime.now()) }
     val today = remember { LocalDate.now() }
@@ -420,7 +424,7 @@ fun TimelineListView(
                         startAt = element.start,
                         finishAt = element.finish,
                         status = element.status,
-                        onClick = {}
+                        onClick = { onFreeSlotClick(element.start) }
                     )
                     TimelineElement.NowMarker -> if (today == selectedDate) NowMarker()
                 }
