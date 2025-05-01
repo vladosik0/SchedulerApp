@@ -48,6 +48,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,6 +71,8 @@ fun TaskEditScreen(
     onCancel: () -> Unit = {}
 ) {
     val now = remember { LocalDateTime.now() }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
 
     val topAppBarTitle = if (initialTask == null) "Create Task" else "Edit Task"
 
@@ -110,7 +113,9 @@ fun TaskEditScreen(
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                }, colors = TopAppBarDefaults.topAppBarColors(
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
@@ -119,6 +124,7 @@ fun TaskEditScreen(
     ) { paddingValues ->
         Column(
             modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
                 .padding(16.dp),
