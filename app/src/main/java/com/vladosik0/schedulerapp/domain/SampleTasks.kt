@@ -1,7 +1,7 @@
-package com.vladosik0.schedulerapp.model
+package com.vladosik0.schedulerapp.domain
 
-import com.vladosik0.schedulerapp.model.enums.Difficulty
-import com.vladosik0.schedulerapp.model.enums.Priority
+import com.vladosik0.schedulerapp.domain.enums.Difficulty
+import com.vladosik0.schedulerapp.domain.enums.Priority
 
 val sampleTasks = listOf(
     Task(1, "2025-05-02T19:00", "2025-05-02T20:00", "Meeting with Team", "Discuss project updates", "Work", 60, Difficulty.NORMAL, Priority.LOW, isDone = true),

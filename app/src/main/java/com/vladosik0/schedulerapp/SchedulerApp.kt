@@ -10,7 +10,7 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import com.vladosik0.schedulerapp.model.sampleTasks
+import com.vladosik0.schedulerapp.domain.sampleTasks
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import com.vladosik0.schedulerapp.presentation.screens.DateScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskDetailsScreen

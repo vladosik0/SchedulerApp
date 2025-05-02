@@ -1,6 +1,6 @@
-package com.vladosik0.schedulerapp.model.validators
+package com.vladosik0.schedulerapp.domain.validators
 
-import com.vladosik0.schedulerapp.model.enums.TimelineEvents
+import com.vladosik0.schedulerapp.domain.enums.TimelineEvents
 
 // --- Check picked filters for Free Slots or Events ---
 fun areOnlyTasksPicked(selectedTimelineEvents: Set<TimelineEvents>): Boolean {

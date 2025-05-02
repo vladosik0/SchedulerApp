@@ -1,4 +1,4 @@
-package com.vladosik0.schedulerapp.model.parsers
+package com.vladosik0.schedulerapp.domain.parsers
 
 import java.time.LocalDate
 import java.time.LocalDateTime

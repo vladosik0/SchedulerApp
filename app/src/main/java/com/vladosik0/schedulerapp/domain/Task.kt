@@ -1,7 +1,7 @@
-package com.vladosik0.schedulerapp.model
+package com.vladosik0.schedulerapp.domain
 
-import com.vladosik0.schedulerapp.model.enums.Difficulty
-import com.vladosik0.schedulerapp.model.enums.Priority
+import com.vladosik0.schedulerapp.domain.enums.Difficulty
+import com.vladosik0.schedulerapp.domain.enums.Priority
 
 data class Task(
     val id: Int,

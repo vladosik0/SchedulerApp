@@ -1,4 +1,4 @@
-package com.vladosik0.schedulerapp.model.formatters
+package com.vladosik0.schedulerapp.domain.formatters
 
 import java.time.LocalDate
 import java.time.LocalDateTime

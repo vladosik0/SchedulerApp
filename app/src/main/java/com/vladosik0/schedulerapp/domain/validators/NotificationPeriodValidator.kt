@@ -1,4 +1,4 @@
-package com.vladosik0.schedulerapp.model.validators
+package com.vladosik0.schedulerapp.domain.validators
 
 import java.time.Duration
 import java.time.LocalDateTime
