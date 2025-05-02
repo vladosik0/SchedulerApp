@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.model.Task
 import com.vladosik0.schedulerapp.model.enums.Difficulty
 import com.vladosik0.schedulerapp.model.enums.Priority
+import com.vladosik0.schedulerapp.model.parsers.parseDateTimeStringToDate
+import com.vladosik0.schedulerapp.model.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.model.validators.isPeriodLogical
 import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
 import java.time.LocalDate
@@ -86,21 +88,21 @@ fun TaskEditScreen(
     var category by rememberSaveable { mutableStateOf(initialTask?.category ?: "") }
 
     var date by rememberSaveable {
-        mutableStateOf(initialTask?.let { LocalDate.parse(it.startAt.substring(0, 10)) } ?: date)
+        mutableStateOf(initialTask?.let { parseDateTimeStringToDate(initialTask.startAt) } ?: date)
     }
     var notificationsExpanded by remember { mutableStateOf(false) }
 
     var startTime by rememberSaveable {
         mutableStateOf(
             when {
-                initialTask != null -> LocalTime.parse(initialTask.startAt.substring(11))
+                initialTask != null -> parseDateTimeStringToTime(initialTask.startAt)
                 startAt != null -> LocalTime.parse(startAt)
                 else -> now.toLocalTime()
             }
         )
     }
     var finishTime by rememberSaveable {
-        mutableStateOf(initialTask?.let { LocalTime.parse(it.finishAt.substring(11)) } ?: now.toLocalTime().plusMinutes(30))
+        mutableStateOf(initialTask?.let { parseDateTimeStringToTime(initialTask.finishAt) } ?: now.toLocalTime().plusMinutes(30))
     }
 
     var difficulty by rememberSaveable { mutableStateOf(initialTask?.difficulty ?: Difficulty.NORMAL) }

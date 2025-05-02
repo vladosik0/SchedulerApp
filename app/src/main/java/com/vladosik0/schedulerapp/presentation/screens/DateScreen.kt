@@ -84,6 +84,7 @@ import com.vladosik0.schedulerapp.model.enums.EventStatus
 import com.vladosik0.schedulerapp.model.enums.Priority
 import com.vladosik0.schedulerapp.model.enums.TimelineEvents
 import com.vladosik0.schedulerapp.model.formatters.getFormattedDate
+import com.vladosik0.schedulerapp.model.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.model.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.model.sampleTasks
 import com.vladosik0.schedulerapp.model.timeline_build_helpers.TimelineElement
@@ -647,7 +648,7 @@ fun TaskItem(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "${task.startAt} - ${task.finishAt}",
+                    "${getFormattedTime(task.startAt)} - ${getFormattedTime(task.finishAt)}",
                     fontSize = 12.sp,
                     color = isPast(status)
                 )

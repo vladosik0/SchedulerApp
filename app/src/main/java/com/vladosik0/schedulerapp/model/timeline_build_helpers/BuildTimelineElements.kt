@@ -3,10 +3,8 @@ package com.vladosik0.schedulerapp.model.timeline_build_helpers
 import com.vladosik0.schedulerapp.model.Task
 import com.vladosik0.schedulerapp.model.enums.EventStatus
 import com.vladosik0.schedulerapp.model.parsers.parseDateTimeStringToTime
-import com.vladosik0.schedulerapp.model.parsers.parseTimeStringToTime
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: LocalDate): List<TimelineElement> {
     val sortedTasks = tasks.sortedBy { parseDateTimeStringToTime(it.startAt) }
@@ -20,7 +18,7 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
     if (sortedTasks.isNotEmpty()) {
         val firstStart = parseDateTimeStringToTime(sortedTasks.first().startAt)
         if (dayStart < firstStart) {
-            val eventStatus = getEventStatus(dayStart.toString(), firstStart.toString(), now, selectedDate)
+            val eventStatus = getEventStatus(dayStart, firstStart, now, selectedDate)
             result.add(
                 TimelineElement.FreeSlot(
                     start = dayStart.toString(),
@@ -38,7 +36,7 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
         val taskEnd = parseDateTimeStringToTime(task.finishAt)
 
         if (previousEndTime != null && previousEndTime < taskStart) {
-            val eventStatus = getEventStatus(previousEndTime.toString(), taskStart.toString(), now, selectedDate)
+            val eventStatus = getEventStatus(previousEndTime, taskStart, now, selectedDate)
             result.add(
                 TimelineElement.FreeSlot(
                     start = previousEndTime.toString(),
@@ -53,7 +51,12 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
             nowMarkerPlaced = true
         }
 
-        val status = getEventStatus(task.startAt, task.finishAt, now, selectedDate)
+        val status = getEventStatus(
+            parseDateTimeStringToTime(task.startAt),
+            parseDateTimeStringToTime(task.finishAt),
+            now,
+            selectedDate
+        )
         result.add(TimelineElement.TaskElement(task, status))
 
         if (status == EventStatus.CURRENT && !nowMarkerPlaced) {
@@ -65,7 +68,7 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
     }
 
     if (previousEndTime != null && previousEndTime < dayEnd) {
-        val eventStatus = getEventStatus(previousEndTime.toString(), dayEnd.toString(), now, selectedDate)
+        val eventStatus = getEventStatus(previousEndTime, dayEnd, now, selectedDate)
         result.add(
             TimelineElement.FreeSlot(
                 start = previousEndTime.toString(),
@@ -83,26 +86,22 @@ fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: Local
 }
 
 // --- Get event status based on current time and date ---
-fun getEventStatus(startAt: String, finishAt: String, now: LocalTime, selectedDate: LocalDate): EventStatus {
-
-    val start = parseTimeStringToTime(startAt)
-    val finish = parseTimeStringToTime(finishAt)
+fun getEventStatus(startAt: LocalTime, finishAt: LocalTime, now: LocalTime, selectedDate: LocalDate): EventStatus {
 
     return when {
         selectedDate.isBefore(LocalDate.now()) -> EventStatus.PAST
         selectedDate.isAfter(LocalDate.now()) -> EventStatus.FUTURE
-        now.isBefore(start) -> EventStatus.FUTURE
-        now.isAfter(finish) -> EventStatus.PAST
+        now.isBefore(startAt) -> EventStatus.FUTURE
+        now.isAfter(finishAt) -> EventStatus.PAST
         else -> EventStatus.CURRENT
     }
 }
 
 // --- Get event status based on time
 fun getEventStatus(startAt: String, finishAt: String): String {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val now = LocalTime.now()
-    val startTime = LocalTime.parse(startAt, formatter)
-    val finishTime = LocalTime.parse(finishAt, formatter)
+    val startTime = parseDateTimeStringToTime(startAt)
+    val finishTime = parseDateTimeStringToTime(finishAt)
 
     return when {
         now.isBefore(startTime) -> "Planned"
