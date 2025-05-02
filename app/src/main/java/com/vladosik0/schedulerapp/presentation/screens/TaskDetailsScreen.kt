@@ -59,6 +59,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.model.Task
+import com.vladosik0.schedulerapp.model.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.model.timeline_build_helpers.getEventStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -185,7 +186,7 @@ fun TaskDetailsScreen(
                     TaskDetailRow(
                         icon = painterResource(R.drawable.clock),
                         label = "Time",
-                        value = "${task.startAt} - ${task.finishAt}"
+                        value = "${getFormattedTime(task.startAt)} - ${getFormattedTime(task.finishAt)}"
                     )
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
