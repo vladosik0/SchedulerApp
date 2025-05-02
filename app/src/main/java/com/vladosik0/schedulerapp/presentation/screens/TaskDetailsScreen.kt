@@ -58,14 +58,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import com.vladosik0.schedulerapp.model.Task
+import com.vladosik0.schedulerapp.model.timeline_build_helpers.getEventStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
     task: Task,
-    onBackIconClick: () -> Unit
+    onBackIconClick: () -> Unit,
+    onEditIconClick: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
@@ -124,7 +125,9 @@ fun TaskDetailsScreen(
                             SmallActionButton(
                                 icon = Icons.Default.Edit,
                                 label = "Edit"
-                            ) { /* TODO */ }
+                            ) {
+                                onEditIconClick()
+                            }
                         }
                     }
                     FloatingActionButton(
@@ -277,25 +280,3 @@ fun SmallActionButton(
         )
     }
 }
-
-private fun getEventStatus(startAt: String, finishAt: String): String {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-    val now = LocalTime.now()
-    val startTime = LocalTime.parse(startAt, formatter)
-    val finishTime = LocalTime.parse(finishAt, formatter)
-
-    return when {
-        now.isBefore(startTime) -> "Planned"
-        now.isAfter(finishTime) -> "Completed"
-        else -> "In Process"
-    }
-}
-
-//@Preview(showBackground = true)
-//@Composable
-//fun DetailsScreenPreview() {
-//    SchedulerAppTheme {
-//        val navController = rememberNavController()
-//        TaskDetailsScreen(1) { navController.popBackStack() }
-//    }
-//}

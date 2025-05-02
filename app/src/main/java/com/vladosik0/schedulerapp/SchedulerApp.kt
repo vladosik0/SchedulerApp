@@ -10,11 +10,11 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.vladosik0.schedulerapp.model.sampleTasks
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import com.vladosik0.schedulerapp.presentation.screens.DateScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskDetailsScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskEditScreen
-import com.vladosik0.schedulerapp.presentation.screens.sampleTasks
 import java.time.LocalDate
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -38,7 +38,13 @@ fun SchedulerApp() {
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
             val task = sampleTasks.find { it.id == taskId }!!
-            TaskDetailsScreen(task) { navController.popBackStack() }
+            TaskDetailsScreen(
+                task = task,
+                onBackIconClick = { navController.popBackStack() },
+                onEditIconClick = {
+                    navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(task.id))
+                }
+            )
         }
 
         composable(
@@ -49,7 +55,7 @@ fun SchedulerApp() {
             val task = sampleTasks.find { it.id == taskId }!!
             TaskEditScreen(
                 initialTask = task,
-                onCancel = { navController.popBackStack() }
+                onCancel = {navController.popBackStack()},
                 // onSave = {}
             )
         }

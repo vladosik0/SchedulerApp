@@ -55,8 +55,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.vladosik0.schedulerapp.model.Task
+import com.vladosik0.schedulerapp.model.enums.Difficulty
+import com.vladosik0.schedulerapp.model.enums.Priority
+import com.vladosik0.schedulerapp.model.validators.isPeriodLogical
 import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -500,19 +503,6 @@ fun DropdownMenuBox(
     }
 }
 
-private fun isPeriodLogical(value: Int, unit: String, startAt: LocalDateTime, finishAt: LocalDateTime): Boolean {
-    val periodDuration = when (unit) {
-        "Minutes" -> Duration.ofMinutes(value.toLong())
-        "Hours" -> Duration.ofHours(value.toLong())
-        "Days" -> Duration.ofDays(value.toLong())
-        "Weeks" -> Duration.ofDays(value.toLong() * 7)
-        else -> Duration.ZERO
-    }
-
-    val taskDuration = Duration.between(startAt, finishAt)
-
-    return !taskDuration.isNegative && periodDuration <= taskDuration
-}
 
 @Preview(showBackground = true)
 @Composable

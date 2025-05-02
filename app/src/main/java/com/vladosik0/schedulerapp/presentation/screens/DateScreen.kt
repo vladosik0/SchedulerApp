@@ -78,14 +78,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.vladosik0.schedulerapp.R
+import com.vladosik0.schedulerapp.model.Task
+import com.vladosik0.schedulerapp.model.enums.Difficulty
+import com.vladosik0.schedulerapp.model.enums.EventStatus
+import com.vladosik0.schedulerapp.model.enums.Priority
+import com.vladosik0.schedulerapp.model.enums.TimelineEvents
+import com.vladosik0.schedulerapp.model.formatters.getFormattedDate
+import com.vladosik0.schedulerapp.model.formatters.toPrettyFormat
+import com.vladosik0.schedulerapp.model.sampleTasks
+import com.vladosik0.schedulerapp.model.timeline_build_helpers.TimelineElement
+import com.vladosik0.schedulerapp.model.validators.areOnlyTasksPicked
+import com.vladosik0.schedulerapp.model.timeline_build_helpers.buildTimelineElements
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -285,82 +294,6 @@ fun TopBarWithDatePicker(
             DatePicker(state = datePickerState)
         }
     }
-}
-
-private fun getFormattedDate(date: LocalDate): String {
-    val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.ENGLISH)
-    return date.format(formatter)
-}
-
-// --- Enums for difficulty and priority ---
-enum class Difficulty(val value: Int) {
-    NORMAL(1),
-    HIGH(2)
-}
-
-enum class Priority(val value: Int) {
-    LOW(1),
-    HIGH(2)
-}
-
-private fun areOnlyTasksPicked(selectedTimelineEvents: Set<TimelineEvents>): Boolean {
-    return TimelineEvents.TASKS in selectedTimelineEvents && TimelineEvents.FREE_SLOTS !in selectedTimelineEvents
-}
-
-// --- Task data class ---
-data class Task(
-    val id: Int,
-    val startAt: String,
-    val finishAt: String,
-    val title: String,
-    val description: String?,
-    val category: String,
-    val duration: Int,
-    val difficulty: Difficulty,
-    val priority: Priority,
-    val isNotified: Boolean = false,
-    val isDone: Boolean = false
-)
-
-// --- Helper to parse time ---
-private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-private fun parseTime(time: String): LocalTime = LocalTime.parse(time, timeFormatter)
-
-// --- Check task status ---
-private fun getEventStatus(startAt: String, finishAt: String, now: LocalTime, selectedDate: LocalDate): EventStatus {
-    val start = parseTime(startAt)
-    val finish = parseTime(finishAt)
-
-    return when {
-        selectedDate.isBefore(LocalDate.now()) -> EventStatus.PAST
-        selectedDate.isAfter(LocalDate.now()) -> EventStatus.FUTURE
-        now.isBefore(start) -> EventStatus.FUTURE
-        now.isAfter(finish) -> EventStatus.PAST
-        else -> EventStatus.CURRENT
-    }
-}
-
-// --- Format enum names ---
-private fun String.toPrettyFormat(): String {
-    return this.lowercase()
-        .split('_')
-        .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-}
-
-// --- Enum for current status of tasks ---
-enum class EventStatus { PAST, CURRENT, FUTURE }
-
-// --- Enum for Timeline filter ---
-enum class TimelineEvents() {
-    TASKS, FREE_SLOTS
-}
-
-// --- Class for timeline elements ---
-sealed class TimelineElement {
-    data class TaskElement(val task: Task, val status: EventStatus) : TimelineElement()
-    data class FreeSlot(val start: String, val finish: String, val status: EventStatus) : TimelineElement()
-    object NowMarker : TimelineElement()
 }
 
 // --- Timeline List View ---
@@ -672,79 +605,6 @@ fun FilterContainer(content: @Composable () -> Unit) {
     }
 }
 
-fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: LocalDate): List<TimelineElement> {
-    val sortedTasks = tasks.sortedBy { parseTime(it.startAt) }
-    val result = mutableListOf<TimelineElement>()
-    var nowMarkerPlaced = false
-
-    val dayStart = LocalTime.MIDNIGHT
-    val dayEnd = LocalTime.of(23, 59)
-
-
-    if (sortedTasks.isNotEmpty()) {
-        val firstStart = parseTime(sortedTasks.first().startAt)
-        if (dayStart < firstStart) {
-            val eventStatus = getEventStatus(dayStart.toString(), firstStart.toString(), now, selectedDate)
-            result.add(
-                TimelineElement.FreeSlot(
-                    start = dayStart.toString(),
-                    finish = firstStart.toString(),
-                    status = eventStatus
-                )
-            )
-        }
-    }
-
-    var previousEndTime: LocalTime? = null
-
-    for (task in sortedTasks) {
-        val taskStart = parseTime(task.startAt)
-        val taskEnd = parseTime(task.finishAt)
-
-        if (previousEndTime != null && previousEndTime < taskStart) {
-            val eventStatus = getEventStatus(previousEndTime.toString(), taskStart.toString(), now, selectedDate)
-            result.add(
-                TimelineElement.FreeSlot(
-                    start = previousEndTime.toString(),
-                    finish = taskStart.toString(),
-                    status = eventStatus
-                )
-            )
-        }
-
-        if (!nowMarkerPlaced && now.isBefore(taskStart)) {
-            result.add(TimelineElement.NowMarker)
-            nowMarkerPlaced = true
-        }
-
-        val status = getEventStatus(task.startAt, task.finishAt, now, selectedDate)
-        result.add(TimelineElement.TaskElement(task, status))
-
-        if (status == EventStatus.CURRENT && !nowMarkerPlaced) {
-            result.add(TimelineElement.NowMarker)
-            nowMarkerPlaced = true
-        }
-
-        previousEndTime = maxOf(previousEndTime ?: taskEnd, taskEnd)
-    }
-
-    if (previousEndTime != null && previousEndTime < dayEnd) {
-        val eventStatus = getEventStatus(previousEndTime.toString(), dayEnd.toString(), now, selectedDate)
-        result.add(
-            TimelineElement.FreeSlot(
-                start = previousEndTime.toString(),
-                finish = dayEnd.toString(),
-                status = eventStatus
-            )
-        )
-    }
-
-    if (!nowMarkerPlaced) {
-        result.add(TimelineElement.NowMarker)
-    }
-
-    return result
-}
 
 @Composable
 fun TaskItem(
@@ -876,14 +736,3 @@ fun NowMarker() {
         )
     }
 }
-
-val sampleTasks = listOf(
-    Task(1, "19:00", "20:00", "Meeting with Team", "Discuss project updates", "Work", 60, Difficulty.NORMAL, Priority.LOW, isDone = true),
-    Task(2, "11:30", "13:00", "Call with Client", "New requirements discussion", "Call", 30, Difficulty.HIGH, Priority.HIGH),
-    Task(3, "14:00", "15:30", "Development", "Work on new feature", "Coding", 90, Difficulty.NORMAL, Priority.HIGH),
-    Task(4, "16:34", "17:20", "Code Review", "Review PRs", "fdfsf", 60, Difficulty.HIGH, Priority.LOW, isNotified = true),
-    Task(5, "18:00", "19:00", "Code Review", "Review PRs", "Revifdsfew", 60, Difficulty.HIGH, Priority.LOW),
-    Task(6, "20:00", "21:00", "Code Review", "Review PRs", "Revaadaiew", 60, Difficulty.HIGH, Priority.LOW),
-    Task(7, "20:00", "21:00", "Code Review", "Review PRs", "Revaadaiew", 60, Difficulty.HIGH, Priority.LOW),
-    Task(8, "20:00", "21:00", "Code Review", "Review PRs", "Revaadaiew", 60, Difficulty.HIGH, Priority.LOW)
-)
