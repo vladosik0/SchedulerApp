@@ -61,9 +61,11 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,9 +78,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.vladosik0.schedulerapp.R
-import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.EventStatus
 import com.vladosik0.schedulerapp.domain.enums.Priority
@@ -86,11 +88,13 @@ import com.vladosik0.schedulerapp.domain.enums.TimelineEvents
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedDate
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
-import com.vladosik0.schedulerapp.domain.sampleTasks
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.TimelineElement
 import com.vladosik0.schedulerapp.domain.validators.areOnlyTasksPicked
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.buildTimelineElements
+import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
+import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
+import com.vladosik0.schedulerapp.presentation.view_models.DateScreenViewModel
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
@@ -100,10 +104,16 @@ import java.time.ZoneId
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun DateScreen(navController: NavController) {
+fun DateScreen(
+    navController: NavController,
+    viewModel: DateScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    val distinctCategories = sampleTasks.map { it.category }.distinct()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    val dateScreenUiState by viewModel.dateScreenUiState.collectAsState()
+    val tasks = dateScreenUiState.tasks
+
+    val distinctCategories = tasks.map { it.category }.distinct()
 
     var selectedPriorities by remember { mutableStateOf(setOf<Priority>()) }
     var selectedDifficulties by remember { mutableStateOf(setOf<Difficulty>()) }
@@ -111,9 +121,9 @@ fun DateScreen(navController: NavController) {
     var selectedTimelineEvents by remember { mutableStateOf(setOf<TimelineEvents>(TimelineEvents.TASKS)) }
 
 
-    var filtersExpanded by remember { mutableStateOf(false) }
+    var filtersExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val filteredTasks = sampleTasks.filter { task ->
+    val filteredTasks = tasks.filter { task ->
         (selectedPriorities.isEmpty() || task.priority in selectedPriorities) &&
                 (selectedDifficulties.isEmpty() || task.difficulty in selectedDifficulties) &&
                 (selectedCategories.isEmpty() || task.category in selectedCategories)
@@ -124,7 +134,7 @@ fun DateScreen(navController: NavController) {
             TopBarWithDatePicker(
                 scrollBehavior,
                 selectedDate
-            ) { newSelectedDate -> selectedDate = newSelectedDate }
+            ) { newSelectedDate ->  viewModel.updateSelectedDate(newSelectedDate) }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -301,11 +311,11 @@ fun TopBarWithDatePicker(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TimelineListView(
-    tasks: List<Task>,
+    tasks: List<TaskUiStateElement>,
     selectedDate: LocalDate,
     filter: Set<TimelineEvents>,
     modifier: Modifier = Modifier,
-    onTaskClick: (Task) -> Unit,
+    onTaskClick: (TaskUiStateElement) -> Unit,
     onFreeSlotClick: (String?) -> Unit
 ) {
     val currentTime = remember { mutableStateOf(LocalTime.now()) }
@@ -609,7 +619,7 @@ fun FilterContainer(content: @Composable () -> Unit) {
 
 @Composable
 fun TaskItem(
-    task: Task,
+    task: TaskUiStateElement,
     status: EventStatus,
     onClick: () -> Unit
 ) {

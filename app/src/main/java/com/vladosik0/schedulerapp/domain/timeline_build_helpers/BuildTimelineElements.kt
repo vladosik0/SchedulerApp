@@ -1,12 +1,12 @@
 package com.vladosik0.schedulerapp.domain.timeline_build_helpers
 
-import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.enums.EventStatus
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
+import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
 import java.time.LocalDate
 import java.time.LocalTime
 
-fun buildTimelineElements(tasks: List<Task>, now: LocalTime, selectedDate: LocalDate): List<TimelineElement> {
+fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selectedDate: LocalDate): List<TimelineElement> {
     val sortedTasks = tasks.sortedBy { parseDateTimeStringToTime(it.startAt) }
     val result = mutableListOf<TimelineElement>()
     var nowMarkerPlaced = false
@@ -112,7 +112,7 @@ fun getEventStatus(startAt: String, finishAt: String): String {
 
 // --- Class for timeline elements ---
 sealed class TimelineElement {
-    data class TaskElement(val task: Task, val status: EventStatus) : TimelineElement()
+    data class TaskElement(val task: TaskUiStateElement, val status: EventStatus) : TimelineElement()
     data class FreeSlot(val start: String, val finish: String, val status: EventStatus) : TimelineElement()
     object NowMarker : TimelineElement()
 }

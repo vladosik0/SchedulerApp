@@ -16,6 +16,9 @@ interface TaskDao {
     @Query("SELECT * from tasks WHERE id = :id")
     fun getTask(id: Int): Flow<Task>
 
+    @Query("SELECT * from tasks WHERE startAt LIKE :date || '%'")
+    fun getTasksByDate(date: String): Flow<List<Task>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(item: Task)
 

@@ -9,6 +9,8 @@ interface TasksRepository {
 
     fun getTaskStream(id: Int): Flow<Task?>
 
+    fun getTasksByDate(date: String): Flow<List<Task>>
+
     suspend fun insertTask(task: Task)
 
     suspend fun updateTask(task: Task)

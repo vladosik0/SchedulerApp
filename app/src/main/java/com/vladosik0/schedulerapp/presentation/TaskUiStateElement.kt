@@ -32,7 +32,7 @@ fun TaskUiStateElement.toTask(): Task = Task(
     isDone = isDone
 )
 
-fun Task.toTaskUiState(actionEnabled: Boolean = false): TaskUiStateElement = TaskUiStateElement(
+fun Task.toTaskUiStateElement(actionEnabled: Boolean = false): TaskUiStateElement = TaskUiStateElement(
     id = id,
     startAt = startAt,
     finishAt = finishAt,

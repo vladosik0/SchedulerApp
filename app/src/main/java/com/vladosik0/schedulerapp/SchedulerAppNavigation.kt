@@ -26,6 +26,7 @@ fun SchedulerAppNavigation(
     viewModel: SchedulerAppNavigationViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val navController = rememberAnimatedNavController()
+    val task = viewModel.editedTaskUiStateElement.collectAsState().value
 
     AnimatedNavHost(
         navController = navController,
@@ -43,7 +44,6 @@ fun SchedulerAppNavigation(
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
             viewModel.updateUiStateById(taskId)
-            val task = viewModel.editedTaskUiStateElement.collectAsState().value
             TaskDetailsScreen(
                 task = task,
                 onBackIconClick = { navController.popBackStack() },
@@ -61,7 +61,6 @@ fun SchedulerAppNavigation(
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
             viewModel.updateUiStateById(taskId)
-            val task = viewModel.editedTaskUiStateElement.collectAsState().value
             TaskEditScreen(
                 initialTask = task,
                 onCancel = {navController.popBackStack()},

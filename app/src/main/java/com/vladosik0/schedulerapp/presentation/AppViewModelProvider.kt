@@ -5,12 +5,16 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.vladosik0.schedulerapp.SchedulerApplication
+import com.vladosik0.schedulerapp.presentation.view_models.DateScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.SchedulerAppNavigationViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
             SchedulerAppNavigationViewModel(
+                tasksRepository = schedulerApplication().container.tasksRepository
+            )
+            DateScreenViewModel(
                 tasksRepository = schedulerApplication().container.tasksRepository
             )
         }
