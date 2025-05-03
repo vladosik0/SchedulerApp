@@ -61,6 +61,7 @@ import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToDate
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.domain.validators.isPeriodLogical
+import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
 import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -71,7 +72,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskEditScreen(
-    initialTask: Task? = null,
+    initialTask: TaskUiStateElement? = null,
     date: LocalDate = LocalDate.now(),
     startAt: String? = null,
     onSave: (Task) -> Unit = {},
@@ -236,19 +237,7 @@ fun TaskEditScreen(
                 Button(onClick = {
                     val startAt = "${date}T${startTime}"
                     val finishAt = "${date}T${finishTime}"
-//                    onSave(
-//                        Task(
-//                            id = initialTask?.id ?: 0,
-//                            startAt = startAt,
-//                            finishAt = finishAt,
-//                            title = title,
-//                            description = description.takeIf { it.isNotBlank() },
-//                            category = category,
-//                            duration = duration.toIntOrNull() ?: 0,
-//                            difficulty = difficulty,
-//                            priority = priority
-//                        )
-//                    )
+                    onSave
                 }) {
                     Text("Save")
                 }

@@ -58,14 +58,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
-import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
+import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
-    task: Task,
+    task: TaskUiStateElement,
     onBackIconClick: () -> Unit,
     onEditIconClick: () -> Unit,
     onDeleteIconClick: () -> Unit,

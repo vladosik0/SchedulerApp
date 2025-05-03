@@ -5,13 +5,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import com.vladosik0.schedulerapp.domain.sampleTasks
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import com.vladosik0.schedulerapp.presentation.screens.DateScreen
@@ -42,7 +42,8 @@ fun SchedulerAppNavigation(
             arguments = listOf(navArgument("taskId") { type = NavType.IntType }),
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
-            val task = sampleTasks.find { it.id == taskId }!!
+            viewModel.updateUiStateById(taskId)
+            val task = viewModel.editedTaskUiStateElement.collectAsState().value
             TaskDetailsScreen(
                 task = task,
                 onBackIconClick = { navController.popBackStack() },
@@ -59,7 +60,8 @@ fun SchedulerAppNavigation(
             arguments = listOf(navArgument("taskId") { type = NavType.IntType })
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
-            val task = sampleTasks.find { it.id == taskId }!!
+            viewModel.updateUiStateById(taskId)
+            val task = viewModel.editedTaskUiStateElement.collectAsState().value
             TaskEditScreen(
                 initialTask = task,
                 onCancel = {navController.popBackStack()},
