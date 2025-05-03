@@ -236,19 +236,19 @@ fun TaskEditScreen(
                 Button(onClick = {
                     val startAt = "${date}T${startTime}"
                     val finishAt = "${date}T${finishTime}"
-                    onSave(
-                        Task(
-                            id = initialTask?.id ?: 0,
-                            startAt = startAt,
-                            finishAt = finishAt,
-                            title = title,
-                            description = description.takeIf { it.isNotBlank() },
-                            category = category,
-                            duration = duration.toIntOrNull() ?: 0,
-                            difficulty = difficulty,
-                            priority = priority
-                        )
-                    )
+//                    onSave(
+//                        Task(
+//                            id = initialTask?.id ?: 0,
+//                            startAt = startAt,
+//                            finishAt = finishAt,
+//                            title = title,
+//                            description = description.takeIf { it.isNotBlank() },
+//                            category = category,
+//                            duration = duration.toIntOrNull() ?: 0,
+//                            difficulty = difficulty,
+//                            priority = priority
+//                        )
+//                    )
                 }) {
                     Text("Save")
                 }

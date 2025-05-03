@@ -2,8 +2,6 @@ package com.vladosik0.schedulerapp.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.vladosik0.schedulerapp.domain.enums.Difficulty
-import com.vladosik0.schedulerapp.domain.enums.Priority
 
 @Entity(tableName = "tasks")
 data class Task(
@@ -15,8 +13,8 @@ data class Task(
     val description: String?,
     val category: String,
     val duration: Int,
-    val difficulty: Difficulty,
-    val priority: Priority,
+    val difficulty: Int,
+    val priority: Int,
     val isNotified: Boolean = false,
     val isDone: Boolean = false
 )
