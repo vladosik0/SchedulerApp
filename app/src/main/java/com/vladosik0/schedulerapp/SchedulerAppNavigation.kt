@@ -19,7 +19,7 @@ import java.time.LocalDate
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SchedulerApp() {
+fun SchedulerAppNavigation() {
     val navController = rememberAnimatedNavController()
 
     AnimatedNavHost(

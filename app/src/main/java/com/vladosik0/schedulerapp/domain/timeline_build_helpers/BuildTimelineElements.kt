@@ -1,6 +1,6 @@
 package com.vladosik0.schedulerapp.domain.timeline_build_helpers
 
-import com.vladosik0.schedulerapp.domain.Task
+import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.enums.EventStatus
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import java.time.LocalDate

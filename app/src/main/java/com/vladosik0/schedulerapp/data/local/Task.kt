@@ -1,10 +1,14 @@
-package com.vladosik0.schedulerapp.domain
+package com.vladosik0.schedulerapp.data.local
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 
+@Entity(tableName = "tasks")
 data class Task(
-    val id: Int,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
     val startAt: String,
     val finishAt: String,
     val title: String,

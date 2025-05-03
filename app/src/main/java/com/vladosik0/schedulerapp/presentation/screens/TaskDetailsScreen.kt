@@ -58,7 +58,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
-import com.vladosik0.schedulerapp.domain.Task
+import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
 
