@@ -56,6 +56,11 @@ class SchedulerAppNavigationViewModel(
             _editedTaskUiStateElement.value = task!!.toTaskUiState()
         }
     }
+
+    fun updateTaskStatus() {
+        val isDone = _editedTaskUiStateElement.value.isDone
+        _editedTaskUiStateElement.value = _editedTaskUiStateElement.value.copy(isDone = !isDone)
+    }
 }
 
 //data class DateScreenUiState(val tasks: List<TaskUiStateElement> = listOf())

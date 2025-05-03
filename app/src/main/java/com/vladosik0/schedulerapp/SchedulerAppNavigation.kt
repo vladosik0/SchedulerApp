@@ -48,7 +48,9 @@ fun SchedulerAppNavigation(
                 onBackIconClick = { navController.popBackStack() },
                 onEditIconClick = {
                     navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(task.id))
-                }
+                },
+                onDeleteIconClick = { viewModel.deleteTask() },
+                onCompleteIconClick = {viewModel.updateTaskStatus()}
             )
         }
 

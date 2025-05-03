@@ -67,7 +67,9 @@ import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
 fun TaskDetailsScreen(
     task: Task,
     onBackIconClick: () -> Unit,
-    onEditIconClick: () -> Unit
+    onEditIconClick: () -> Unit,
+    onDeleteIconClick: () -> Unit,
+    onCompleteIconClick: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
@@ -118,17 +120,15 @@ fun TaskDetailsScreen(
                             SmallActionButton(
                                 icon = Icons.Default.Delete,
                                 label = "Delete"
-                            ) { /* TODO */ }
+                            ) { onDeleteIconClick() }
                             SmallActionButton(
                                 icon = Icons.Default.Check,
                                 label = "Complete"
-                            ) { /* TODO */ }
+                            ) { onCompleteIconClick() }
                             SmallActionButton(
                                 icon = Icons.Default.Edit,
                                 label = "Edit"
-                            ) {
-                                onEditIconClick()
-                            }
+                            ) { onEditIconClick() }
                         }
                     }
                     FloatingActionButton(
