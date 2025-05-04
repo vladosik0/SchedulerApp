@@ -14,6 +14,8 @@ object AppViewModelProvider {
             SchedulerAppNavigationViewModel(
                 tasksRepository = schedulerApplication().container.tasksRepository
             )
+        }
+        initializer {
             DateScreenViewModel(
                 tasksRepository = schedulerApplication().container.tasksRepository
             )
