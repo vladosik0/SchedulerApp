@@ -11,8 +11,10 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToDate
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.presentation.converters.EditTaskScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toEditTaskScreenUiState
+import com.vladosik0.schedulerapp.presentation.converters.toTask
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -20,7 +22,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 class TaskEditScreenViewModel (
-    tasksRepository: TasksRepository,
+    private val tasksRepository: TasksRepository,
     savedStateHandle: SavedStateHandle
 ): ViewModel() {
 
@@ -58,8 +60,6 @@ class TaskEditScreenViewModel (
                     finishTime = startTime.plusMinutes(90)
                 )
             }
-
-
         }
     }
 
@@ -71,6 +71,9 @@ class TaskEditScreenViewModel (
 
     private val _finishTimeErrorMessage = MutableStateFlow("")
     val finishTimeErrorMessage: StateFlow<String> = _finishTimeErrorMessage
+
+    private val _saveTaskErrorMessage = MutableStateFlow("")
+    val saveTaskErrorMessage: StateFlow<String> = _saveTaskErrorMessage
 
     fun updateTitle(title: String) {
         if(title.length <= 50) {
@@ -120,8 +123,35 @@ class TaskEditScreenViewModel (
         _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(difficulty = difficulty)
     }
 
-    fun saveTask() {
+    private fun checkTaskValidation() {
+        viewModelScope.launch {
+            val newTaskStartAt = _editTaskScreenUiState.value.date.atTime(_editTaskScreenUiState.value.startTime)
+            val newTaskFinishAt = _editTaskScreenUiState.value.date.atTime(_editTaskScreenUiState.value.finishTime)
+            val tasks = tasksRepository.getTasksByDate(_editTaskScreenUiState.value.date.toString()).first()
 
+            val hasOverlap = tasks.any { task ->
+                val taskStartAt = LocalDateTime.parse(task.startAt)
+                val taskFinishAt = LocalDateTime.parse(task.finishAt)
+                newTaskStartAt < taskFinishAt && newTaskFinishAt >= taskStartAt
+            }
+
+            if(hasOverlap) {
+                _saveTaskErrorMessage.value = "There are already tasks in this time interval!"
+            } else {
+                _saveTaskErrorMessage.value = ""
+            }
+        }
+    }
+
+    fun saveTask() {
+        checkTaskValidation()
+        viewModelScope.launch {
+            if (_saveTaskErrorMessage.value != "" && taskId != null) {
+                tasksRepository.updateTask(_editTaskScreenUiState.value.toTask(taskId.toInt()))
+            } else if (_saveTaskErrorMessage.value != "" && taskId == null) {
+                tasksRepository.insertTask(_editTaskScreenUiState.value.toTask())
+            }
+        }
     }
 
     //updateIsNotified

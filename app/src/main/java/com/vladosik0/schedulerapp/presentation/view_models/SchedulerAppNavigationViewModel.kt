@@ -19,21 +19,9 @@ class SchedulerAppNavigationViewModel(
     private val _editedTaskUiStateElement = MutableStateFlow(TaskUiStateElement())
     val editedTaskUiStateElement: StateFlow<TaskUiStateElement> = _editedTaskUiStateElement
 
-    fun updateTask() {
-        viewModelScope.launch(Dispatchers.IO) {
-            tasksRepository.updateTask(_editedTaskUiStateElement.value.toTask())
-        }
-    }
-
     fun deleteTask() {
         viewModelScope.launch(Dispatchers.IO) {
             tasksRepository.deleteTask(_editedTaskUiStateElement.value.toTask())
-        }
-    }
-
-    fun createTask() {
-        viewModelScope.launch(Dispatchers.IO) {
-            tasksRepository.insertTask(_editedTaskUiStateElement.value.toTask())
         }
     }
 

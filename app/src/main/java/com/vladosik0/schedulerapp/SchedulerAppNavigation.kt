@@ -64,8 +64,7 @@ fun SchedulerAppNavigation(
             )
             TaskEditScreen(
                 viewModel = taskEditScreenViewModel,
-                onCancel = {navController.popBackStack()},
-                onSave = { viewModel.updateTask() }
+                onCancel = {navController.popBackStack()}
             )
         }
 
@@ -78,8 +77,7 @@ fun SchedulerAppNavigation(
             )
             TaskEditScreen(
                 viewModel = taskEditScreenViewModel,
-                onCancel = { navController.popBackStack() },
-                onSave = { viewModel.createTask() }
+                onCancel = { navController.popBackStack() }
             )
         }
 
@@ -94,8 +92,7 @@ fun SchedulerAppNavigation(
             )
             TaskEditScreen(
                 viewModel = taskEditScreenViewModel,
-                onCancel = { navController.popBackStack() },
-                onSave = { viewModel.createTask() }
+                onCancel = { navController.popBackStack() }
             )
         }
     }

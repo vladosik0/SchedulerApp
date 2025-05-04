@@ -19,7 +19,7 @@ data class EditTaskScreenUiState(
     val priority: Priority = Priority.LOW
 )
 
-fun EditTaskScreenUiState.toTask(id: Int): Task = Task(
+fun EditTaskScreenUiState.toTask(id: Int = 0): Task = Task(
     id = id,
     startAt = "${date.atTime(startTime)}",
     finishAt = "${date.atTime(finishTime)}",

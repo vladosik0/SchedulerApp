@@ -55,7 +55,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
@@ -70,7 +69,6 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskEditScreen(
-    onSave: (Task) -> Unit = {},
     onCancel: () -> Unit = {},
     viewModel: TaskEditScreenViewModel
 ) {
@@ -84,6 +82,7 @@ fun TaskEditScreen(
 
     val startTimeErrorMessage by viewModel.startTimeErrorMessage.collectAsState()
     val finishTimeErrorMessage by viewModel.finishTimeErrorMessage.collectAsState()
+    val saveTaskErrorMessage by viewModel.saveTaskErrorMessage.collectAsState()
 
 
     Scaffold(
@@ -242,15 +241,21 @@ fun TaskEditScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            if(saveTaskErrorMessage != "") {
+                Text(
+                    text = saveTaskErrorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround
             ) {
                 OutlinedButton(onClick = onCancel) {
                     Text("Cancel")
                 }
-                Button(onClick = {
-                    onSave
-                }) {
+                Button(onClick = {viewModel.saveTask()}) {
                     Text("Save")
                 }
             }
@@ -342,12 +347,13 @@ fun TimePickerField(
         readOnly = true
     )
 
-    if(errorMessage != "")
-    Text(
-        text = errorMessage,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.error
-    )
+    if(errorMessage != "") {
+        Text(
+            text = errorMessage,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
 }
 
 
