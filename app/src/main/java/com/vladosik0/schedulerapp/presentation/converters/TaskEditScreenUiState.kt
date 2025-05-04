@@ -8,7 +8,7 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import java.time.LocalDate
 import java.time.LocalTime
 
-data class EditTaskScreenUiState(
+data class TaskEditScreenUiState(
     val date: LocalDate = LocalDate.now(),
     val startTime: LocalTime = LocalTime.now(),
     val finishTime: LocalTime = LocalTime.now().plusMinutes(30),
@@ -19,7 +19,7 @@ data class EditTaskScreenUiState(
     val priority: Priority = Priority.LOW
 )
 
-fun EditTaskScreenUiState.toTask(id: Int = 0): Task = Task(
+fun TaskEditScreenUiState.toTask(id: Int = 0): Task = Task(
     id = id,
     startAt = "${date.atTime(startTime)}",
     finishAt = "${date.atTime(finishTime)}",
@@ -30,7 +30,7 @@ fun EditTaskScreenUiState.toTask(id: Int = 0): Task = Task(
     priority = if(priority == Priority.LOW) 1 else 2
 )
 
-fun Task.toEditTaskScreenUiState(): EditTaskScreenUiState = EditTaskScreenUiState(
+fun Task.toEditTaskScreenUiState(): TaskEditScreenUiState = TaskEditScreenUiState(
     date = parseDateTimeStringToDate(startAt),
     startTime = parseDateTimeStringToTime(startAt),
     finishTime = parseDateTimeStringToTime(finishAt),

@@ -9,7 +9,7 @@ import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.parsers.parseDateStringToDate
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToDate
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
-import com.vladosik0.schedulerapp.presentation.converters.EditTaskScreenUiState
+import com.vladosik0.schedulerapp.presentation.converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toEditTaskScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toTask
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,21 +32,21 @@ class TaskEditScreenViewModel (
 
     private val slot: String? = savedStateHandle["slot"]
 
-    private val _editTaskScreenUiState = MutableStateFlow(EditTaskScreenUiState())
-    val editTaskScreenUiState: StateFlow<EditTaskScreenUiState> = _editTaskScreenUiState
+    private val _taskEditScreenUiState = MutableStateFlow(TaskEditScreenUiState())
+    val taskEditScreenUiState: StateFlow<TaskEditScreenUiState> = _taskEditScreenUiState
 
     init {
         when {
             taskId != null -> {
                 viewModelScope.launch {
                     tasksRepository.getTaskStream(taskId.toInt())
-                        .map { it?.toEditTaskScreenUiState() ?: EditTaskScreenUiState() }
-                        .collect { _editTaskScreenUiState.value = it }
+                        .map { it?.toEditTaskScreenUiState() ?: TaskEditScreenUiState() }
+                        .collect { _taskEditScreenUiState.value = it }
                 }
             }
 
             date != null -> {
-                _editTaskScreenUiState.value = EditTaskScreenUiState(
+                _taskEditScreenUiState.value = TaskEditScreenUiState(
                     date = parseDateStringToDate(date)
                 )
             }
@@ -54,7 +54,7 @@ class TaskEditScreenViewModel (
             slot != null -> {
                 val startTime = if (LocalDateTime.parse(slot).isBefore(LocalDateTime.now()))
                     LocalTime.now() else parseDateTimeStringToTime(slot)
-                _editTaskScreenUiState.value = EditTaskScreenUiState(
+                _taskEditScreenUiState.value = TaskEditScreenUiState(
                     date = parseDateTimeStringToDate(slot),
                     startTime = startTime,
                     finishTime = startTime.plusMinutes(90)
@@ -62,7 +62,6 @@ class TaskEditScreenViewModel (
             }
         }
     }
-
 
     val topAppBarTitle: String = if (taskId == null) "Create Task" else "Edit Task"
 
@@ -75,59 +74,85 @@ class TaskEditScreenViewModel (
     private val _saveTaskErrorMessage = MutableStateFlow("")
     val saveTaskErrorMessage: StateFlow<String> = _saveTaskErrorMessage
 
+    private val _isTaskValid = MutableStateFlow(false)
+    val isTaskValid: StateFlow<Boolean> = _isTaskValid
+
     fun updateTitle(title: String) {
-        if(title.length <= 50) {
-            _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(title = title)
-        }
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(title = title)
+        checkTaskValidation()
     }
 
     fun updateDescription(description: String) {
-        if(description.length <= 500) {
-            _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(description = description)
-        }
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(description = description)
+        checkTaskValidation()
     }
 
     fun updateCategory(category: String) {
-        if(category.length <= 50) {
-            _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(category = category)
-        }
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(category = category)
+        checkTaskValidation()
     }
 
     fun updateDate(date: LocalDate) {
-        _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(date = date)
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(date = date)
+        checkTaskValidation()
     }
 
     fun updateStartTime(startTime: LocalTime) {
-        if(startTime.isBefore(_editTaskScreenUiState.value.finishTime)) {
-            _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(startTime = startTime)
-            _startTimeErrorMessage.value = ""
-        } else {
-            _startTimeErrorMessage.value = "Start Time must be before Finish Time"
-        }
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(startTime = startTime)
+        checkTaskValidation()
     }
 
     fun updateFinishTime(finishTime: LocalTime) {
-        if(finishTime.isAfter(_editTaskScreenUiState.value.startTime)) {
-            _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(finishTime = finishTime)
-            _finishTimeErrorMessage. value = ""
-        } else {
-            _finishTimeErrorMessage.value = "Finish Time must be after Start Time"
-        }
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(finishTime = finishTime)
+        checkTaskValidation()
     }
 
     fun updatePriority(priority: Priority) {
-        _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(priority = priority)
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(priority = priority)
     }
 
     fun updateDifficulty(difficulty: Difficulty) {
-        _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(difficulty = difficulty)
+        _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(difficulty = difficulty)
     }
 
     private fun checkTaskValidation() {
         viewModelScope.launch {
-            val newTaskStartAt = _editTaskScreenUiState.value.date.atTime(_editTaskScreenUiState.value.startTime)
-            val newTaskFinishAt = _editTaskScreenUiState.value.date.atTime(_editTaskScreenUiState.value.finishTime)
-            val tasks = tasksRepository.getTasksByDate(_editTaskScreenUiState.value.date.toString()).first()
+
+            var isValid = true
+
+            val title = _taskEditScreenUiState.value.title
+            if((title.length > 50 || title.isBlank())) {
+                isValid = false
+            }
+
+            val description = _taskEditScreenUiState.value.description
+            if((description.length > 250 || description.isBlank())) {
+                isValid = false
+            }
+
+            val category = _taskEditScreenUiState.value.category
+            if((category.length > 50 || category.isBlank())) {
+                isValid = false
+            }
+
+            val startTime = _taskEditScreenUiState.value.startTime
+            val finishTime = _taskEditScreenUiState.value.finishTime
+            if(startTime.isAfter(finishTime)) {
+                isValid = false
+                _startTimeErrorMessage.value = "Start Time must be before Finish Time"
+            } else {
+                _startTimeErrorMessage.value = ""
+            }
+            if(finishTime.isBefore(startTime)) {
+                isValid = false
+                _finishTimeErrorMessage.value = "Finish Time must be after Start Time"
+            } else {
+                _finishTimeErrorMessage.value = ""
+            }
+
+            val newTaskStartAt = _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.startTime)
+            val newTaskFinishAt = _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.finishTime)
+            val tasks = tasksRepository.getTasksByDate(_taskEditScreenUiState.value.date.toString()).first()
 
             val hasOverlap = tasks.any { task ->
                 val taskStartAt = LocalDateTime.parse(task.startAt)
@@ -137,19 +162,20 @@ class TaskEditScreenViewModel (
 
             if(hasOverlap) {
                 _saveTaskErrorMessage.value = "There are already tasks in this time interval!"
+                isValid = false
             } else {
                 _saveTaskErrorMessage.value = ""
             }
+            _isTaskValid.value = isValid
         }
     }
 
     fun saveTask() {
-        checkTaskValidation()
         viewModelScope.launch {
-            if (_saveTaskErrorMessage.value != "" && taskId != null) {
-                tasksRepository.updateTask(_editTaskScreenUiState.value.toTask(taskId.toInt()))
-            } else if (_saveTaskErrorMessage.value != "" && taskId == null) {
-                tasksRepository.insertTask(_editTaskScreenUiState.value.toTask())
+            if (taskId != null) {
+                tasksRepository.updateTask(_taskEditScreenUiState.value.toTask(taskId.toInt()))
+            } else {
+                tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
             }
         }
     }

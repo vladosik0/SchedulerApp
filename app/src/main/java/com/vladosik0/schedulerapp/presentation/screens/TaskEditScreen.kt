@@ -74,7 +74,7 @@ fun TaskEditScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val initialTask by viewModel.editTaskScreenUiState.collectAsState()
+    val initialTask by viewModel.taskEditScreenUiState.collectAsState()
 
     val topAppBarTitle = viewModel.topAppBarTitle
 
@@ -83,6 +83,8 @@ fun TaskEditScreen(
     val startTimeErrorMessage by viewModel.startTimeErrorMessage.collectAsState()
     val finishTimeErrorMessage by viewModel.finishTimeErrorMessage.collectAsState()
     val saveTaskErrorMessage by viewModel.saveTaskErrorMessage.collectAsState()
+
+    val isTaskValid by viewModel.isTaskValid.collectAsState()
 
 
     Scaffold(
@@ -255,7 +257,15 @@ fun TaskEditScreen(
                 OutlinedButton(onClick = onCancel) {
                     Text("Cancel")
                 }
-                Button(onClick = {viewModel.saveTask()}) {
+                Button(
+                    enabled = isTaskValid,
+                    onClick = {
+                        viewModel.saveTask()
+                        if(isTaskValid) {
+                        onCancel()
+                        }
+                    }
+                ) {
                     Text("Save")
                 }
             }
