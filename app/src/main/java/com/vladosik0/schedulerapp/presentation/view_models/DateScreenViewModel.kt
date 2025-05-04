@@ -93,7 +93,7 @@ class DateScreenViewModel(
     fun updateSelectedTimelineEvents(timelineEvent: TimelineEvents) {
         if (!_selectedTimelineEvents.value.contains(timelineEvent)) {
             _selectedTimelineEvents.value = _selectedTimelineEvents.value + timelineEvent
-        } else {
+        } else if(_selectedTimelineEvents.value.size != 1){
             _selectedTimelineEvents.value = _selectedTimelineEvents.value - timelineEvent
         }
     }
