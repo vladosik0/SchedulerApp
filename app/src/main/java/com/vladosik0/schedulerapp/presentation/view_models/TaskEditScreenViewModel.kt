@@ -12,15 +12,15 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.presentation.converters.EditTaskScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toEditTaskScreenUiState
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 class TaskEditScreenViewModel (
-    private val tasksRepository: TasksRepository,
+    tasksRepository: TasksRepository,
     savedStateHandle: SavedStateHandle
 ): ViewModel() {
 
@@ -31,25 +31,38 @@ class TaskEditScreenViewModel (
     private val slot: String? = savedStateHandle["slot"]
 
     private val _editTaskScreenUiState = MutableStateFlow(EditTaskScreenUiState())
-    val editTaskScreenUiState = _editTaskScreenUiState
-        .onStart {
-            if(taskId != null) {
-                tasksRepository.getTaskStream(taskId.toInt()).map { it?.toEditTaskScreenUiState() }
-            } else if(date != null) {
-                EditTaskScreenUiState(date = parseDateStringToDate(date))
-            } else if(slot != null) {
-                EditTaskScreenUiState(
-                    date = parseDateTimeStringToDate(slot),
-                    startTime = parseDateTimeStringToTime(slot),
-                    finishTime = parseDateTimeStringToTime(slot).plusMinutes(30)
+    val editTaskScreenUiState: StateFlow<EditTaskScreenUiState> = _editTaskScreenUiState
+
+    init {
+        when {
+            taskId != null -> {
+                viewModelScope.launch {
+                    tasksRepository.getTaskStream(taskId.toInt())
+                        .map { it?.toEditTaskScreenUiState() ?: EditTaskScreenUiState() }
+                        .collect { _editTaskScreenUiState.value = it }
+                }
+            }
+
+            date != null -> {
+                _editTaskScreenUiState.value = EditTaskScreenUiState(
+                    date = parseDateStringToDate(date)
                 )
             }
+
+            slot != null -> {
+                val startTime = if (LocalDateTime.parse(slot).isBefore(LocalDateTime.now()))
+                    LocalTime.now() else parseDateTimeStringToTime(slot)
+                _editTaskScreenUiState.value = EditTaskScreenUiState(
+                    date = parseDateTimeStringToDate(slot),
+                    startTime = startTime,
+                    finishTime = startTime.plusMinutes(90)
+                )
+            }
+
+
         }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000L),
-            EditTaskScreenUiState()
-        )
+    }
+
 
     val topAppBarTitle: String = if (taskId == null) "Create Task" else "Edit Task"
 
