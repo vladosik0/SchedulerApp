@@ -66,6 +66,12 @@ class TaskEditScreenViewModel (
 
     val topAppBarTitle: String = if (taskId == null) "Create Task" else "Edit Task"
 
+    private val _startTimeErrorMessage = MutableStateFlow("")
+    val startTimeErrorMessage: StateFlow<String> = _startTimeErrorMessage
+
+    private val _finishTimeErrorMessage = MutableStateFlow("")
+    val finishTimeErrorMessage: StateFlow<String> = _finishTimeErrorMessage
+
     fun updateTitle(title: String) {
         if(title.length <= 50) {
             _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(title = title)
@@ -91,14 +97,18 @@ class TaskEditScreenViewModel (
     fun updateStartTime(startTime: LocalTime) {
         if(startTime.isBefore(_editTaskScreenUiState.value.finishTime)) {
             _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(startTime = startTime)
-
+            _startTimeErrorMessage.value = ""
+        } else {
+            _startTimeErrorMessage.value = "Start Time must be before Finish Time"
         }
     }
 
     fun updateFinishTime(finishTime: LocalTime) {
         if(finishTime.isAfter(_editTaskScreenUiState.value.startTime)) {
             _editTaskScreenUiState.value = _editTaskScreenUiState.value.copy(finishTime = finishTime)
-
+            _finishTimeErrorMessage. value = ""
+        } else {
+            _finishTimeErrorMessage.value = "Finish Time must be after Start Time"
         }
     }
 

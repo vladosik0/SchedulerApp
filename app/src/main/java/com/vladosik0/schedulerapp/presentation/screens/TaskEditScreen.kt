@@ -82,6 +82,10 @@ fun TaskEditScreen(
 
     var notificationsExpanded by rememberSaveable { mutableStateOf(false) }
 
+    val startTimeErrorMessage by viewModel.startTimeErrorMessage.collectAsState()
+    val finishTimeErrorMessage by viewModel.finishTimeErrorMessage.collectAsState()
+
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -107,8 +111,7 @@ fun TaskEditScreen(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(16.dp)
         ) {
             OutlinedTextField(
                 value = initialTask.title,
@@ -119,9 +122,11 @@ fun TaskEditScreen(
             )
             Text(
                 text = "Max symbol limit: 50",
-                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = initialTask.description,
@@ -132,9 +137,12 @@ fun TaskEditScreen(
             )
             Text(
                 text = "Max symbol limit: 250",
-                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
 
             OutlinedTextField(
                 value = initialTask.category,
@@ -145,13 +153,31 @@ fun TaskEditScreen(
             )
             Text(
                 text = "Max symbol limit: 50",
-                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             DatePickerField(initialTask.date) { viewModel.updateDate(it) }
-            TimePickerField("Start", initialTask.startTime) { viewModel.updateStartTime(it) }
-            TimePickerField("Finish", initialTask.finishTime) { viewModel.updateFinishTime(it) }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TimePickerField(
+                "Start",
+                initialTask.startTime,
+                startTimeErrorMessage
+            ) { viewModel.updateStartTime(it) }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TimePickerField(
+                "Finish",
+                initialTask.finishTime,
+                finishTimeErrorMessage
+            ) { viewModel.updateFinishTime(it) }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -167,6 +193,8 @@ fun TaskEditScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -180,6 +208,8 @@ fun TaskEditScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -199,6 +229,9 @@ fun TaskEditScreen(
                     modifier = Modifier.size(14.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             AnimatedVisibility(
                 visible = notificationsExpanded,
                 enter = expandVertically() + fadeIn(),
@@ -207,10 +240,12 @@ fun TaskEditScreen(
                 NotificationSettings()
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround
             ) {
-                Button(onClick = onCancel) {
+                OutlinedButton(onClick = onCancel) {
                     Text("Cancel")
                 }
                 Button(onClick = {
@@ -240,7 +275,7 @@ fun DatePickerField(
                 onDateSelected(parsed)
             }
         },
-        label = { Text("Date (dd.MM.yyyy)") },
+        label = { Text("Date") },
         trailingIcon = {
             Icon(
                 painter = painterResource(R.drawable.calendar),
@@ -268,11 +303,12 @@ fun DatePickerField(
 fun TimePickerField(
     label: String,
     selectedTime: LocalTime,
+    errorMessage: String,
     onTimeSelected: (LocalTime) -> Unit
 ) {
     val context = LocalContext.current
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
-    var text by remember { mutableStateOf(selectedTime.format(formatter)) }
+    var text by rememberSaveable { mutableStateOf(selectedTime.format(formatter)) }
     OutlinedTextField(
         value = text,
         onValueChange = {
@@ -282,7 +318,7 @@ fun TimePickerField(
                 onTimeSelected(parsed)
             }
         },
-        label = { Text("$label Time (HH:mm)") },
+        label = { Text("$label Time") },
         trailingIcon = {
             Icon(
                 painter = painterResource(R.drawable.clock_create),
@@ -301,8 +337,16 @@ fun TimePickerField(
                     })
         },
         singleLine = true,
+        isError = errorMessage != "",
         modifier = Modifier.fillMaxWidth(),
         readOnly = true
+    )
+
+    if(errorMessage != "")
+    Text(
+        text = errorMessage,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.error
     )
 }
 
@@ -365,8 +409,6 @@ fun NotificationSettings(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
                 Button(onClick = {
                     val value = customValue.toIntOrNull()
                     if (value == null || value <= 0) {
@@ -417,10 +459,10 @@ fun NotificationSettings(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                TimePickerField(
-                    label = "Notification",
-                    selectedTime = selectedTime ?: LocalTime.now(),
-                    onTimeSelected = { selectedTime = it })
+//                TimePickerField(
+//                    label = "Notification",
+//                    selectedTime = selectedTime ?: LocalTime.now(),
+//                    onTimeSelected = { selectedTime = it })
 
                 Spacer(modifier = Modifier.height(8.dp))
 
