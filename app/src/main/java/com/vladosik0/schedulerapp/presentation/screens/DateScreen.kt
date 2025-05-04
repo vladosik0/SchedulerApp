@@ -89,7 +89,6 @@ import com.vladosik0.schedulerapp.domain.formatters.getFormattedDate
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.TimelineElement
-import com.vladosik0.schedulerapp.domain.validators.areOnlyTasksPicked
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.buildTimelineElements
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
@@ -110,24 +109,18 @@ fun DateScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val selectedDate by viewModel.selectedDate.collectAsState()
-    val dateScreenUiState by viewModel.dateScreenUiState.collectAsState()
-    val tasks = dateScreenUiState.tasks
 
-    val distinctCategories = tasks.map { it.category }.distinct()
+    val distinctCategories by viewModel.distinctCategories.collectAsState()
 
-    var selectedPriorities by remember { mutableStateOf(setOf<Priority>()) }
-    var selectedDifficulties by remember { mutableStateOf(setOf<Difficulty>()) }
-    var selectedCategories by remember { mutableStateOf(setOf<String>()) }
-    var selectedTimelineEvents by remember { mutableStateOf(setOf<TimelineEvents>(TimelineEvents.TASKS)) }
+    val selectedPriorities by viewModel.selectedPriorities.collectAsState()
+    val selectedDifficulties by viewModel.selectedDifficulties.collectAsState()
+    val selectedCategories by viewModel.selectedCategories.collectAsState()
+    val selectedTimelineEvents by viewModel.selectedTimelineEvents.collectAsState()
 
 
     var filtersExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val filteredTasks = tasks.filter { task ->
-        (selectedPriorities.isEmpty() || task.priority in selectedPriorities) &&
-                (selectedDifficulties.isEmpty() || task.difficulty in selectedDifficulties) &&
-                (selectedCategories.isEmpty() || task.category in selectedCategories)
-    }
+    val filteredTasks by viewModel.filteredTasks.collectAsState()
 
     Scaffold(
         topBar = {
@@ -186,34 +179,10 @@ fun DateScreen(
                     selectedCategories = selectedCategories,
                     selectedTimelineEvents = selectedTimelineEvents,
                     categories = distinctCategories,
-                    onPrioritySelected = { priority ->
-                        selectedPriorities = if (!selectedPriorities.contains(priority) && areOnlyTasksPicked(selectedTimelineEvents)) {
-                            selectedPriorities + priority
-                        } else {
-                            selectedPriorities - priority
-                        }
-                    },
-                    onDifficultySelected = { difficulty ->
-                        selectedDifficulties = if (!selectedDifficulties.contains(difficulty) && areOnlyTasksPicked(selectedTimelineEvents)) {
-                            selectedDifficulties + difficulty
-                        } else {
-                            selectedDifficulties - difficulty
-                        }
-                    },
-                    onCategorySelected = { category ->
-                        selectedCategories = if (!selectedCategories.contains(category) && areOnlyTasksPicked(selectedTimelineEvents)) {
-                            selectedCategories + category
-                        } else {
-                            selectedCategories - category
-                        }
-                    },
-                    onTimelineEventSelected = { timelineEvent ->
-                        selectedTimelineEvents = if (selectedTimelineEvents.contains(timelineEvent)) {
-                            selectedTimelineEvents - timelineEvent
-                        } else {
-                            selectedTimelineEvents + timelineEvent
-                        }
-                    },
+                    onPrioritySelected = { priority -> viewModel.updateSelectedPriorities(priority) },
+                    onDifficultySelected = { difficulty -> viewModel.updateSelectedDifficulties(difficulty) },
+                    onCategorySelected = { category -> viewModel.updateSelectedCategories(category)},
+                    onTimelineEventSelected = { timelineEvent -> viewModel.updateSelectedTimelineEvents(timelineEvent)}
                 )
             }
             Text(
@@ -256,7 +225,7 @@ fun TopBarWithDatePicker(
     selectedDate: LocalDate,
     onDateChange: (LocalDate) -> Unit
 ) {
-    var showDatePicker by remember { mutableStateOf(false) }
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
     TopAppBar(
