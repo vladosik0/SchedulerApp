@@ -14,19 +14,30 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selec
     val dayStart = LocalTime.MIDNIGHT
     val dayEnd = LocalTime.of(23, 59)
 
-
-    if (sortedTasks.isNotEmpty()) {
-        val firstStart = parseDateTimeStringToTime(sortedTasks.first().startAt)
-        if (dayStart < firstStart) {
-            val eventStatus = getEventStatus(dayStart, firstStart, now, selectedDate)
-            result.add(
-                TimelineElement.FreeSlot(
-                    start = dayStart.toString(),
-                    finish = firstStart.toString(),
-                    status = eventStatus
-                )
+    if(sortedTasks.isEmpty()) {
+        val eventStatus = getEventStatus(dayStart, dayEnd, now, selectedDate)
+        result.add(
+            TimelineElement.FreeSlot(
+                start = dayStart.toString(),
+                finish = dayEnd.toString(),
+                status = eventStatus
             )
-        }
+        )
+        result.add(TimelineElement.NowMarker)
+        return result
+    }
+
+
+    val firstStart = parseDateTimeStringToTime(sortedTasks.first().startAt)
+    if (dayStart < firstStart) {
+        val eventStatus = getEventStatus(dayStart, firstStart, now, selectedDate)
+        result.add(
+            TimelineElement.FreeSlot(
+                start = dayStart.toString(),
+                finish = firstStart.toString(),
+                status = eventStatus
+            )
+        )
     }
 
     var previousEndTime: LocalTime? = null

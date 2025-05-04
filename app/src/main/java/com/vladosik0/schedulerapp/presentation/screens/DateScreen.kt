@@ -313,6 +313,8 @@ fun TimelineListView(
         }
     }
 
+
+
     AnimatedContent(
         targetState = filteredElements,
         transitionSpec = {
