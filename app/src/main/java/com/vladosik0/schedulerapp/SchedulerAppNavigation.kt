@@ -18,7 +18,7 @@ import com.vladosik0.schedulerapp.presentation.screens.DateScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskDetailsScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskEditScreen
 import com.vladosik0.schedulerapp.presentation.view_models.SchedulerAppNavigationViewModel
-import java.time.LocalDate
+import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -26,7 +26,7 @@ fun SchedulerAppNavigation(
     viewModel: SchedulerAppNavigationViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val navController = rememberAnimatedNavController()
-    val task = viewModel.editedTaskUiStateElement.collectAsState().value
+    val task = viewModel.editedTaskUiStateElement.collectAsState()
 
     AnimatedNavHost(
         navController = navController,
@@ -45,10 +45,10 @@ fun SchedulerAppNavigation(
             val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
             viewModel.updateUiStateById(taskId)
             TaskDetailsScreen(
-                task = task,
+                task = task.value,
                 onBackIconClick = { navController.popBackStack() },
                 onEditIconClick = {
-                    navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(task.id))
+                    navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(task.value.id))
                 },
                 onDeleteIconClick = { viewModel.deleteTask() },
                 onCompleteIconClick = {viewModel.updateTaskStatus()}
@@ -58,11 +58,12 @@ fun SchedulerAppNavigation(
         composable(
             route = NavigationRoutes.TaskEditScreen.route,
             arguments = listOf(navArgument("taskId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
-            viewModel.updateUiStateById(taskId)
+        ) {
+            val taskEditScreenViewModel: TaskEditScreenViewModel = viewModel(
+                factory = AppViewModelProvider.Factory
+            )
             TaskEditScreen(
-                initialTask = task,
+                viewModel = taskEditScreenViewModel,
                 onCancel = {navController.popBackStack()},
                 onSave = { viewModel.updateTask() }
             )
@@ -71,11 +72,12 @@ fun SchedulerAppNavigation(
         composable(
             route = NavigationRoutes.TaskCreateScreen.route,
             arguments = listOf(navArgument("date") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val dateStr = backStackEntry.arguments?.getString("date")!!
-            val date = LocalDate.parse(dateStr)
+        ) {
+            val taskEditScreenViewModel: TaskEditScreenViewModel = viewModel(
+                factory = AppViewModelProvider.Factory
+            )
             TaskEditScreen(
-                date = date,
+                viewModel = taskEditScreenViewModel,
                 onCancel = { navController.popBackStack() },
                 onSave = { viewModel.createTask() }
             )
@@ -86,10 +88,12 @@ fun SchedulerAppNavigation(
             arguments = listOf(navArgument("slot") {
                 type = NavType.StringType
             })
-        ) { backStackEntry ->
-            val slot = backStackEntry.arguments?.getString("slot")
+        ) {
+            val taskEditScreenViewModel: TaskEditScreenViewModel = viewModel(
+                factory = AppViewModelProvider.Factory
+            )
             TaskEditScreen(
-                startAt = slot,
+                viewModel = taskEditScreenViewModel,
                 onCancel = { navController.popBackStack() },
                 onSave = { viewModel.createTask() }
             )

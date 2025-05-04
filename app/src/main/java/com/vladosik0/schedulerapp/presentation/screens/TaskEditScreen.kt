@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,16 +54,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
-import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToDate
-import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
+import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.validators.isPeriodLogical
-import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
-import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
+import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -72,43 +70,17 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskEditScreen(
-    initialTask: TaskUiStateElement? = null,
-    date: LocalDate = LocalDate.now(),
-    startAt: String? = null,
     onSave: (Task) -> Unit = {},
-    onCancel: () -> Unit = {}
+    onCancel: () -> Unit = {},
+    viewModel: TaskEditScreenViewModel
 ) {
-    val now = remember { LocalDateTime.now() }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    val initialTask by viewModel.editTaskScreenUiState.collectAsState()
 
-    val topAppBarTitle = if (initialTask == null) "Create Task" else "Edit Task"
+    val topAppBarTitle = viewModel.topAppBarTitle
 
-    var title by rememberSaveable { mutableStateOf(initialTask?.title ?: "") }
-    var description by rememberSaveable { mutableStateOf(initialTask?.description ?: "") }
-    var category by rememberSaveable { mutableStateOf(initialTask?.category ?: "") }
-
-    var date by rememberSaveable {
-        mutableStateOf(initialTask?.let { parseDateTimeStringToDate(initialTask.startAt) } ?: date)
-    }
-    var notificationsExpanded by remember { mutableStateOf(false) }
-
-    var startTime by rememberSaveable {
-        mutableStateOf(
-            when {
-                initialTask != null -> parseDateTimeStringToTime(initialTask.startAt)
-                startAt != null -> LocalTime.parse(startAt)
-                else -> now.toLocalTime()
-            }
-        )
-    }
-    var finishTime by rememberSaveable {
-        mutableStateOf(initialTask?.let { parseDateTimeStringToTime(initialTask.finishAt) } ?: now.toLocalTime().plusMinutes(30))
-    }
-
-    var difficulty by rememberSaveable { mutableStateOf(initialTask?.difficulty ?: Difficulty.NORMAL) }
-    var priority by rememberSaveable { mutableStateOf(initialTask?.priority ?: Priority.LOW) }
-    var duration by rememberSaveable { mutableStateOf(initialTask?.duration?.toString() ?: "30") }
+    var notificationsExpanded by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -139,40 +111,47 @@ fun TaskEditScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedTextField(
-                value = title,
-                onValueChange = { if (it.length <= 50) title = it },
+                value = initialTask.title,
+                onValueChange = { viewModel.updateTitle(it) },
                 label = { Text("Title") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+            Text(
+                text = "Max symbol limit: 50",
+                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+            )
 
             OutlinedTextField(
-                value = description,
-                onValueChange = { if (it.length <= 500) description = it },
+                value = initialTask.description,
+                onValueChange = { viewModel.updateDescription(it) },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 5
             )
+            Text(
+                text = "Max symbol limit: 250",
+                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+            )
 
             OutlinedTextField(
-                value = category,
-                onValueChange = { if (it.length <= 50) category = it },
+                value = initialTask.category,
+                onValueChange = { viewModel.updateCategory(it) },
                 label = { Text("Category") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            DatePickerField(date) { date = it }
-            TimePickerField("Start", startTime) { startTime = it }
-            TimePickerField("Finish", finishTime) { finishTime = it }
-
-            OutlinedTextField(
-                value = duration,
-                onValueChange = { if (it.all(Char::isDigit)) duration = it },
-                label = { Text("Duration (min)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+            Text(
+                text = "Max symbol limit: 50",
+                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
             )
+
+            DatePickerField(initialTask.date) { viewModel.updateDate(it) }
+            TimePickerField("Start", initialTask.startTime) { viewModel.updateStartTime(it) }
+            TimePickerField("Finish", initialTask.finishTime) { viewModel.updateFinishTime(it) }
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -180,11 +159,11 @@ fun TaskEditScreen(
             ) {
                 Text("Difficulty:")
                 Difficulty.entries.forEach {
-                    FilterChip(selected = difficulty == it, onClick = { difficulty = it }, label = {
-                        Text(
-                            it.name.lowercase().replaceFirstChar(Char::uppercase)
-                        )
-                    })
+                    FilterChip(
+                        selected = initialTask.difficulty == it,
+                        onClick = {  viewModel.updateDifficulty(it) },
+                        label = { Text(it.name.toPrettyFormat()) }
+                    )
                 }
             }
 
@@ -194,11 +173,11 @@ fun TaskEditScreen(
             ) {
                 Text("Priority:")
                 Priority.entries.forEach {
-                    FilterChip(selected = priority == it, onClick = { priority = it }, label = {
-                        Text(
-                            it.name.lowercase().replaceFirstChar(Char::uppercase)
-                        )
-                    })
+                    FilterChip(
+                        selected = initialTask.priority == it,
+                        onClick = { viewModel.updatePriority(it) },
+                        label = { Text(it.name.toPrettyFormat()) }
+                    )
                 }
             }
 
@@ -235,8 +214,6 @@ fun TaskEditScreen(
                     Text("Cancel")
                 }
                 Button(onClick = {
-                    val startAt = "${date}T${startTime}"
-                    val finishAt = "${date}T${finishTime}"
                     onSave
                 }) {
                     Text("Save")
@@ -491,14 +468,5 @@ fun DropdownMenuBox(
                 )
             }
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun EditScreenPreview() {
-    SchedulerAppTheme {
-        TaskEditScreen { }
     }
 }

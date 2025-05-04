@@ -88,16 +88,17 @@ import com.vladosik0.schedulerapp.domain.enums.TimelineEvents
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedDate
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
+import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.TimelineElement
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.buildTimelineElements
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
-import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import com.vladosik0.schedulerapp.presentation.view_models.DateScreenViewModel
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
+import java.time.LocalDateTime
 import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -287,12 +288,12 @@ fun TimelineListView(
     onTaskClick: (TaskUiStateElement) -> Unit,
     onFreeSlotClick: (String?) -> Unit
 ) {
-    val currentTime = remember { mutableStateOf(LocalTime.now()) }
+    val currentTime = remember { mutableStateOf(LocalDateTime.now()) }
     val today = remember { LocalDate.now() }
 
     LaunchedEffect(Unit) {
         while (true) {
-            currentTime.value = LocalTime.now()
+            currentTime.value = LocalDateTime.now()
             delay(30_000)
         }
     }
@@ -312,8 +313,6 @@ fun TimelineListView(
             }
         }
     }
-
-
 
     AnimatedContent(
         targetState = filteredElements,
@@ -384,7 +383,7 @@ fun FreeSlotItem(
 
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                "$startAt - $finishAt",
+                "${parseDateTimeStringToTime(startAt)} - ${parseDateTimeStringToTime(finishAt)}",
                 fontSize = 12.sp,
                 color = isPast(status)
             )

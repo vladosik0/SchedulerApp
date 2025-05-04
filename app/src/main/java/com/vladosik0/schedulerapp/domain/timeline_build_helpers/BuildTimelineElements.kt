@@ -2,20 +2,21 @@ package com.vladosik0.schedulerapp.domain.timeline_build_helpers
 
 import com.vladosik0.schedulerapp.domain.enums.EventStatus
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
-import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
-fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selectedDate: LocalDate): List<TimelineElement> {
+fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalDateTime, selectedDate: LocalDate): List<TimelineElement> {
     val sortedTasks = tasks.sortedBy { parseDateTimeStringToTime(it.startAt) }
     val result = mutableListOf<TimelineElement>()
     var nowMarkerPlaced = false
 
-    val dayStart = LocalTime.MIDNIGHT
-    val dayEnd = LocalTime.of(23, 59)
+    val dayStart = selectedDate.atTime(LocalTime.MIDNIGHT)
+    val dayEnd = selectedDate.atTime(LocalTime.of(23, 59))
 
     if(sortedTasks.isEmpty()) {
-        val eventStatus = getEventStatus(dayStart, dayEnd, now, selectedDate)
+        val eventStatus = getEventStatus(dayStart, dayEnd, now)
         result.add(
             TimelineElement.FreeSlot(
                 start = dayStart.toString(),
@@ -28,9 +29,9 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selec
     }
 
 
-    val firstStart = parseDateTimeStringToTime(sortedTasks.first().startAt)
+    val firstStart = LocalDateTime.parse(sortedTasks.first().startAt)
     if (dayStart < firstStart) {
-        val eventStatus = getEventStatus(dayStart, firstStart, now, selectedDate)
+        val eventStatus = getEventStatus(dayStart, firstStart, now)
         result.add(
             TimelineElement.FreeSlot(
                 start = dayStart.toString(),
@@ -40,14 +41,14 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selec
         )
     }
 
-    var previousEndTime: LocalTime? = null
+    var previousEndTime: LocalDateTime? = null
 
     for (task in sortedTasks) {
-        val taskStart = parseDateTimeStringToTime(task.startAt)
-        val taskEnd = parseDateTimeStringToTime(task.finishAt)
+        val taskStart = LocalDateTime.parse(task.startAt)
+        val taskEnd = LocalDateTime.parse(task.finishAt)
 
         if (previousEndTime != null && previousEndTime < taskStart) {
-            val eventStatus = getEventStatus(previousEndTime, taskStart, now, selectedDate)
+            val eventStatus = getEventStatus(previousEndTime, taskStart, now)
             result.add(
                 TimelineElement.FreeSlot(
                     start = previousEndTime.toString(),
@@ -63,10 +64,9 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selec
         }
 
         val status = getEventStatus(
-            parseDateTimeStringToTime(task.startAt),
-            parseDateTimeStringToTime(task.finishAt),
-            now,
-            selectedDate
+            LocalDateTime.parse(task.startAt),
+            LocalDateTime.parse(task.finishAt),
+            now
         )
         result.add(TimelineElement.TaskElement(task, status))
 
@@ -79,7 +79,7 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selec
     }
 
     if (previousEndTime != null && previousEndTime < dayEnd) {
-        val eventStatus = getEventStatus(previousEndTime, dayEnd, now, selectedDate)
+        val eventStatus = getEventStatus(previousEndTime, dayEnd, now)
         result.add(
             TimelineElement.FreeSlot(
                 start = previousEndTime.toString(),
@@ -97,11 +97,9 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalTime, selec
 }
 
 // --- Get event status based on current time and date ---
-fun getEventStatus(startAt: LocalTime, finishAt: LocalTime, now: LocalTime, selectedDate: LocalDate): EventStatus {
+fun getEventStatus(startAt: LocalDateTime, finishAt: LocalDateTime, now: LocalDateTime): EventStatus {
 
     return when {
-        selectedDate.isBefore(LocalDate.now()) -> EventStatus.PAST
-        selectedDate.isAfter(LocalDate.now()) -> EventStatus.FUTURE
         now.isBefore(startAt) -> EventStatus.FUTURE
         now.isAfter(finishAt) -> EventStatus.PAST
         else -> EventStatus.CURRENT

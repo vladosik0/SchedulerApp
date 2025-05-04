@@ -58,9 +58,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
+import com.vladosik0.schedulerapp.domain.formatters.formatDuration
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
-import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -157,7 +158,7 @@ fun TaskDetailsScreen(
                 .alpha(backgroundAlpha)
         ) {
             Text(
-                text = task.title + ", 10h ${task.duration}min",
+                text = task.title + formatDuration(task.startAt, task.finishAt),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 4.dp)

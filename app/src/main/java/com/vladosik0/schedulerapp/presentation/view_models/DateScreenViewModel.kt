@@ -8,8 +8,8 @@ import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.enums.TimelineEvents
 import com.vladosik0.schedulerapp.domain.validators.areOnlyTasksPicked
-import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
-import com.vladosik0.schedulerapp.presentation.toTaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.converters.toTaskUiStateElement
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +22,6 @@ import java.time.LocalDate
 
 data class DateScreenUiState(
     val tasks: List<TaskUiStateElement> = emptyList()
-    //filteredTasks
 )
 
 class DateScreenViewModel(

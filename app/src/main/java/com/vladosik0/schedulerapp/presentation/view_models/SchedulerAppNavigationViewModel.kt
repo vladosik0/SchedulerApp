@@ -3,9 +3,9 @@ package com.vladosik0.schedulerapp.presentation.view_models
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
-import com.vladosik0.schedulerapp.presentation.TaskUiStateElement
-import com.vladosik0.schedulerapp.presentation.toTask
-import com.vladosik0.schedulerapp.presentation.toTaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.converters.toTask
+import com.vladosik0.schedulerapp.presentation.converters.toTaskUiStateElement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

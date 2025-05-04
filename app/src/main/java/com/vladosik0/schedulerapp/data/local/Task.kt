@@ -12,7 +12,6 @@ data class Task(
     val title: String,
     val description: String?,
     val category: String,
-    val duration: Int,
     val difficulty: Int,
     val priority: Int,
     val isNotified: Boolean = false,
