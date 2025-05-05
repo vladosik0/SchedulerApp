@@ -30,13 +30,15 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalDateTime, s
     }
 
 
-    val firstStart = LocalDateTime.parse(sortedTasks.first().startAt)
+    var firstStart = LocalDateTime.parse(sortedTasks.first().startAt)
+    firstStart = LocalDateTime.parse(firstStart.toString())
+    val parsedFirstStart = firstStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))
     if (dayStart < firstStart) {
         val eventStatus = getEventStatus(dayStart, firstStart, now)
         result.add(
             TimelineElement.FreeSlot(
                 start = dayStart.toString(),
-                finish = firstStart.toString(),
+                finish = parsedFirstStart.toString(),
                 status = eventStatus
             )
         )
@@ -111,9 +113,6 @@ fun getEventStatus(startAt: LocalDateTime, finishAt: LocalDateTime, now: LocalDa
 
 // --- Get event status based on time
 fun getEventStatus(startAt: String, finishAt: String): String {
-    if(startAt == "" || finishAt == "") {
-        return ""
-    }
     val now = LocalDateTime.now()
     val startTime = LocalDateTime.parse(startAt)
     val finishTime = LocalDateTime.parse(finishAt)
