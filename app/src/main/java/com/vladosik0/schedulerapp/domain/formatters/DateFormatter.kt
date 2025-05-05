@@ -11,6 +11,9 @@ fun getFormattedDate(date: LocalDate): String {
 }
 
 fun getFormattedTime(dateTimeString: String) : String {
+    if(dateTimeString == "") {
+        return ""
+    }
     val time = LocalDateTime.parse(dateTimeString).toLocalTime()
     return time.format(DateTimeFormatter.ofPattern("HH:mm"))
 }

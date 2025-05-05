@@ -3,6 +3,7 @@ package com.vladosik0.schedulerapp.presentation.screens
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -73,6 +74,7 @@ fun TaskEditScreen(
     viewModel: TaskEditScreenViewModel
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val context = LocalContext.current
 
     val initialTask by viewModel.taskEditScreenUiState.collectAsState()
 
@@ -261,9 +263,8 @@ fun TaskEditScreen(
                     enabled = isTaskValid,
                     onClick = {
                         viewModel.saveTask()
-                        if(isTaskValid) {
+                        Toast.makeText(context, "Task created successfully", Toast.LENGTH_SHORT).show()
                         onCancel()
-                        }
                     }
                 ) {
                     Text("Save")

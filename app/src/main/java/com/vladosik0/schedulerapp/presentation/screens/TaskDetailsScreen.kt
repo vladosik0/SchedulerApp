@@ -1,5 +1,6 @@
 package com.vladosik0.schedulerapp.presentation.screens
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -44,6 +46,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +60,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
@@ -66,29 +70,34 @@ import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
 import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsUiState
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
     viewModel: TaskDetailsScreenViewModel,
     onBackIconClick: () -> Unit,
-    onEditIconClick: () -> Unit,
-    onDeleteIconClick: () -> Unit,
-    onCompleteIconClick: () -> Unit
+    onEditIconClick: (Int) -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    val rotation by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        animationSpec = tween(durationMillis = 300),
-        label = "icon_rotation"
-    )
-    val backgroundAlpha by animateFloatAsState(targetValue = if (expanded) 0.4f else 1f, label = "background_alpha")
+    when (val state = viewModel.taskDetailsUiState.collectAsState().value) {
+        is TaskDetailsUiState.Loading -> CircularProgressIndicator()
+        is TaskDetailsUiState.Success -> {
+            val context = LocalContext.current
+            var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            val rotation by animateFloatAsState(
+                targetValue = if (expanded) 180f else 0f,
+                animationSpec = tween(durationMillis = 300),
+                label = "icon_rotation"
+            )
+            val backgroundAlpha by animateFloatAsState(
+                targetValue = if (expanded) 0.4f else 1f,
+                label = "background_alpha"
+            )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Task Details") },
-                navigationIcon = {
+            Scaffold(topBar = {
+                TopAppBar(
+                    title = { Text("Task Details") }, navigationIcon = {
                     IconButton(onClick = onBackIconClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -96,66 +105,94 @@ fun TaskDetailsScreen(
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
+                }, colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
-            )
-        },
-        floatingActionButton = {
-            Box(
-                contentAlignment = Alignment.BottomEnd,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(bottom = 16.dp, end = 16.dp)
+                )
+            }, floatingActionButton = {
+                Box(
+                    contentAlignment = Alignment.BottomEnd,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    AnimatedVisibility(
-                        visible = expanded,
-                        enter = fadeIn(tween(300)) + scaleIn(tween(300)),
-                        exit = fadeOut(tween(300)) + scaleOut(tween(300))
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(bottom = 16.dp, end = 16.dp)
                     ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            horizontalAlignment = Alignment.End
+                        AnimatedVisibility(
+                            visible = expanded,
+                            enter = fadeIn(tween(300)) + scaleIn(tween(300)),
+                            exit = fadeOut(tween(300)) + scaleOut(tween(300))
                         ) {
-                            SmallActionButton(
-                                icon = Icons.Default.Delete,
-                                label = "Delete"
-                            ) { onDeleteIconClick() }
-                            SmallActionButton(
-                                icon = Icons.Default.Check,
-                                label = "Complete"
-                            ) { onCompleteIconClick() }
-                            SmallActionButton(
-                                icon = Icons.Default.Edit,
-                                label = "Edit"
-                            ) { onEditIconClick() }
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                SmallActionButton(
+                                    icon = Icons.Default.Delete, label = "Delete"
+                                ) {
+                                    showDeleteDialog = true
+                                }
+                                SmallActionButton(
+                                    icon = if(state.task.isDone) Icons.Default.Close else Icons.Default.Check,
+                                    label = if(state.task.isDone) "Uncomplete" else "Complete"
+                                ) {
+                                    if(LocalDateTime.now().isAfter(LocalDateTime.parse(state.task.startAt))) {
+                                        Toast.makeText(context, "This task is already in the past", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Task's status is changed", Toast.LENGTH_SHORT).show()
+                                        viewModel.updateTaskStatus()
+                                    }
+                                    expanded = !expanded
+                                }
+                                SmallActionButton(
+                                    icon = Icons.Default.Edit, label = "Edit"
+                                ) { onEditIconClick(state.task.id) }
+                            }
                         }
-                    }
-                    FloatingActionButton(
-                        onClick = { expanded = !expanded },
-                        containerColor = if (expanded) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.tertiaryContainer
-                    ) {
-                        Crossfade(targetState = expanded, label = "icon_crossfade") { isExpanded ->
-                            Icon(
-                                imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.MoreVert,
-                                contentDescription = if (isExpanded) "Close" else "Actions",
-                                modifier = Modifier.rotate(rotation),
-                                tint = if (isExpanded) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onTertiaryContainer
-                            )
+                        FloatingActionButton(
+                            onClick = { expanded = !expanded },
+                            containerColor = if (expanded) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.tertiaryContainer
+                        ) {
+                            Crossfade(
+                                targetState = expanded,
+                                label = "icon_crossfade"
+                            ) { isExpanded ->
+                                Icon(
+                                    imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.MoreVert,
+                                    contentDescription = if (isExpanded) "Close" else "Actions",
+                                    modifier = Modifier.rotate(rotation),
+                                    tint = if (isExpanded) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
                         }
                     }
                 }
-            }
-        }
-    ) { paddingValues ->
-        when (val state = viewModel.taskDetailsUiState.collectAsState().value) {
-            is TaskDetailsUiState.Loading -> CircularProgressIndicator()
-            is TaskDetailsUiState.Success -> {
+            }) { paddingValues ->
+                if (showDeleteDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteDialog = false },
+                        title = { Text("Confirm Deletion") },
+                        text = { Text("Are you sure you want to delete this task?") },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showDeleteDialog = false
+                                viewModel.deleteTask {
+                                    Toast.makeText(context, "Task deleted successfully", Toast.LENGTH_SHORT).show()
+                                    onBackIconClick()
+                                }
+                            }) {
+                                Text("Yes")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteDialog = false }) {
+                                Text("No")
+                            }
+                        }
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -201,7 +238,7 @@ fun TaskDetailsScreen(
                             TaskDetailRow(
                                 icon = painterResource(R.drawable.status),
                                 label = "Status",
-                                value = getEventStatus(state.task.startAt, state.task.finishAt)
+                                value = if(state.task.isDone) "Completed" else getEventStatus(state.task.startAt, state.task.finishAt)
                             )
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -222,7 +259,7 @@ fun TaskDetailsScreen(
                             TaskDetailRow(
                                 icon = painterResource(R.drawable.notification),
                                 label = "Notification",
-                                value = if(state.task.isNotified) "On" else "Off"
+                                value = if (state.task.isNotified) "On" else "Off"
                             )
                         }
                     }
@@ -232,7 +269,7 @@ fun TaskDetailsScreen(
                         modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
                     )
                     Text(
-                        text = if(state.task.description.isNullOrBlank()) "No description" else state.task.description,
+                        text = if (state.task.description.isNullOrBlank()) "No description" else state.task.description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth()

@@ -7,7 +7,7 @@ import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.converters.toTask
 import com.vladosik0.schedulerapp.presentation.converters.toTaskUiStateElement
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -32,20 +32,26 @@ class TaskDetailsScreenViewModel(
     private val _taskDetailsUiState = MutableStateFlow<TaskDetailsUiState>(TaskDetailsUiState.Loading)
     val taskDetailsUiState: StateFlow<TaskDetailsUiState> = _taskDetailsUiState
 
-    private val _taskDetailsUiStateElement = MutableStateFlow(TaskUiStateElement())
-    val taskDetailsUiStateElement: StateFlow<TaskUiStateElement> = _taskDetailsUiStateElement
-
-    fun deleteTask() {
-        viewModelScope.launch(Dispatchers.IO) {
-            tasksRepository.deleteTask(_taskDetailsUiStateElement.value.toTask())
+    fun deleteTask(onDeleted: () -> Unit) {
+        val currentState = _taskDetailsUiState.value
+        if (currentState is TaskDetailsUiState.Success) {
+            viewModelScope.launch {
+                tasksRepository.deleteTask(currentState.task.toTask())
+                _taskDetailsUiState.value = TaskDetailsUiState.Loading
+                delay(200)
+                onDeleted()
+            }
         }
     }
 
     fun updateTaskStatus() {
-        val isDone = _taskDetailsUiStateElement.value.isDone
-        _taskDetailsUiStateElement.value = _taskDetailsUiStateElement.value.copy(isDone = !isDone)
-        viewModelScope.launch(Dispatchers.IO) {
-            tasksRepository.updateTask(_taskDetailsUiStateElement.value.toTask())
+        val currentState = _taskDetailsUiState.value
+        if(currentState is TaskDetailsUiState.Success) {
+            val updatedTask = currentState.task.copy(isDone = !currentState.task.isDone)
+            _taskDetailsUiState.value = TaskDetailsUiState.Success(task = updatedTask)
+            viewModelScope.launch {
+                tasksRepository.updateTask(task = updatedTask.toTask())
+            }
         }
     }
 }
