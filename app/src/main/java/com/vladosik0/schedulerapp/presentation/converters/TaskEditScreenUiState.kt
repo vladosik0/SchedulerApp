@@ -16,7 +16,8 @@ data class TaskEditScreenUiState(
     val description: String = "",
     val category: String = "",
     val difficulty: Difficulty = Difficulty.NORMAL,
-    val priority: Priority = Priority.LOW
+    val priority: Priority = Priority.LOW,
+    val isLoading: Boolean = true
 )
 
 fun TaskEditScreenUiState.toTask(id: Int = 0): Task = Task(

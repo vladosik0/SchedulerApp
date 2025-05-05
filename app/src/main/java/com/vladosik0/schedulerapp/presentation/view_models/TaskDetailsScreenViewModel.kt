@@ -24,10 +24,10 @@ class TaskDetailsScreenViewModel(
     init {
         if(taskId != null) {
             viewModelScope.launch(Dispatchers.IO) {
-                delay(500)
                 tasksRepository.getTaskStream(taskId)
                     .map { TaskDetailsUiState.Success(it?.toTaskUiStateElement() ?: TaskUiStateElement()) }
                     .collect { _taskDetailsUiState.value = it }
+                delay(500)
             }
         }
     }

@@ -13,6 +13,7 @@ import com.vladosik0.schedulerapp.presentation.converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toEditTaskScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toTask
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -42,7 +43,10 @@ class TaskEditScreenViewModel (
                 viewModelScope.launch(Dispatchers.IO) {
                     tasksRepository.getTaskStream(taskId)
                         .map { it?.toEditTaskScreenUiState() ?: TaskEditScreenUiState() }
-                        .collect { _taskEditScreenUiState.value = it }
+                        .collect {
+                            _taskEditScreenUiState.value = it.copy(isLoading = false)
+                            delay(200)
+                        }
                 }
             }
 
@@ -157,7 +161,7 @@ class TaskEditScreenViewModel (
             val hasOverlap = tasks.any { task ->
                 val taskStartAt = LocalDateTime.parse(task.startAt)
                 val taskFinishAt = LocalDateTime.parse(task.finishAt)
-                newTaskStartAt < taskFinishAt && newTaskFinishAt >= taskStartAt
+                newTaskStartAt < taskFinishAt && newTaskFinishAt >= taskStartAt && task.id != taskId
             }
 
             if(hasOverlap) {
@@ -177,10 +181,9 @@ class TaskEditScreenViewModel (
             } else {
                 tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
             }
+            _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(isLoading = true)
+            delay(200)
         }
     }
-
     //updateIsNotified
-
-
 }

@@ -3,6 +3,7 @@ package com.vladosik0.schedulerapp.presentation.screens
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -91,11 +94,15 @@ fun TaskEditScreen(
 
     val isTaskValid by viewModel.isTaskValid.collectAsState()
 
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(topAppBarTitle) }, navigationIcon = {
+    if(initialTask.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(modifier = Modifier.size(36.dp))
+        }
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(topAppBarTitle) }, navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -103,178 +110,169 @@ fun TaskEditScreen(
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
+                }, scrollBehavior = scrollBehavior, colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
-            )
-        },
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            OutlinedTextField(
-                value = initialTask.title,
-                onValueChange = { viewModel.updateTitle(it) },
-                label = { Text("Title") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = "Max symbol limit: 50",
-                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = initialTask.description,
-                onValueChange = { viewModel.updateDescription(it) },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 5
-            )
-            Text(
-                text = "Max symbol limit: 250",
-                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-
-            OutlinedTextField(
-                value = initialTask.category,
-                onValueChange = { viewModel.updateCategory(it) },
-                label = { Text("Category") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = "Max symbol limit: 50",
-                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            DatePickerField(initialTask.date) { viewModel.updateDate(it) }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TimePickerField(
-                "Start",
-                initialTask.startTime,
-                startTimeErrorMessage
-            ) { viewModel.updateStartTime(it) }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TimePickerField(
-                "Finish",
-                initialTask.finishTime,
-                finishTimeErrorMessage
-            ) { viewModel.updateFinishTime(it) }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Difficulty:")
-                Difficulty.entries.forEach {
-                    FilterChip(
-                        selected = initialTask.difficulty == it,
-                        onClick = {  viewModel.updateDifficulty(it) },
-                        label = { Text(it.name.toPrettyFormat()) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Priority:")
-                Priority.entries.forEach {
-                    FilterChip(
-                        selected = initialTask.priority == it,
-                        onClick = { viewModel.updatePriority(it) },
-                        label = { Text(it.name.toPrettyFormat()) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { notificationsExpanded = !notificationsExpanded }
-            ) {
-                Text(
-                    text = "Notifications",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Image(
-                    painter = painterResource(R.drawable.notification),
-                    contentDescription = if (notificationsExpanded) "Collapse Notifications" else "Expand Notifications",
-                    modifier = Modifier.size(14.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            AnimatedVisibility(
-                visible = notificationsExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+            },
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .verticalScroll(rememberScrollState()).padding(paddingValues).padding(16.dp)
             ) {
-                NotificationSettings()
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if(saveTaskErrorMessage != "") {
+                OutlinedTextField(
+                    value = initialTask.title,
+                                  onValueChange = { viewModel.updateTitle(it) },
+                                  label = { Text("Title") },
+                                  singleLine = true,
+                                  modifier = Modifier.fillMaxWidth()
+                )
                 Text(
-                    text = saveTaskErrorMessage,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    text = "Max symbol limit: 50",
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = initialTask.description,
+                    onValueChange = { viewModel.updateDescription(it) },
+                    label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    maxLines = 5
                 )
-            }
+                Text(
+                    text = "Max symbol limit: 250",
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                OutlinedButton(onClick = onCancel) {
-                    Text("Cancel")
-                }
-                Button(
-                    enabled = isTaskValid,
-                    onClick = {
-                        viewModel.saveTask()
-                        Toast.makeText(context, "Task created successfully", Toast.LENGTH_SHORT).show()
-                        onCancel()
-                    }
+
+                OutlinedTextField(
+                    value = initialTask.category,
+                                  onValueChange = { viewModel.updateCategory(it) },
+                                  label = { Text("Category") },
+                                  singleLine = true,
+                                  modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = "Max symbol limit: 50",
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                DatePickerField(initialTask.date) { viewModel.updateDate(it) }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Log.d("UI_DEBUG_START", "${initialTask.startTime}")
+                Log.d("UI_DEBUG_FINISH", "${initialTask.finishTime}")
+
+                TimePickerField(
+                    "Start", initialTask.startTime, startTimeErrorMessage
+                ) { viewModel.updateStartTime(it) }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                TimePickerField(
+                    "Finish", initialTask.finishTime, finishTimeErrorMessage
+                ) { viewModel.updateFinishTime(it) }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Save")
+                    Text("Difficulty:")
+                    Difficulty.entries.forEach {
+                        FilterChip(
+                            selected = initialTask.difficulty == it,
+                            onClick = { viewModel.updateDifficulty(it) },
+                            label = { Text(it.name.toPrettyFormat()) })
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Priority:")
+                    Priority.entries.forEach {
+                        FilterChip(
+                            selected = initialTask.priority == it,
+                            onClick = { viewModel.updatePriority(it) },
+                            label = { Text(it.name.toPrettyFormat()) })
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                        .clickable { notificationsExpanded = !notificationsExpanded }) {
+                    Text(
+                        text = "Notifications",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Image(
+                        painter = painterResource(R.drawable.notification),
+                        contentDescription = if (notificationsExpanded) "Collapse Notifications" else "Expand Notifications",
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                AnimatedVisibility(
+                    visible = notificationsExpanded,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    NotificationSettings()
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (saveTaskErrorMessage != "") {
+                    Text(
+                        text = saveTaskErrorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    OutlinedButton(onClick = onCancel) {
+                        Text("Cancel")
+                    }
+                    Button(
+                        enabled = isTaskValid, onClick = {
+                            viewModel.saveTask()
+                            Toast.makeText(context, "Task created successfully", Toast.LENGTH_SHORT)
+                                .show()
+                            onCancel()
+                        }) {
+                        Text("Save")
+                    }
                 }
             }
         }
