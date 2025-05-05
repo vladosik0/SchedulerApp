@@ -65,6 +65,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.domain.formatters.formatDuration
+import com.vladosik0.schedulerapp.domain.formatters.getFormattedDateFromString
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
@@ -138,7 +139,7 @@ fun TaskDetailsScreen(
                                     icon = if(state.task.isDone) Icons.Default.Close else Icons.Default.Check,
                                     label = if(state.task.isDone) "Uncomplete" else "Complete"
                                 ) {
-                                    if(LocalDateTime.now().isAfter(LocalDateTime.parse(state.task.startAt))) {
+                                    if(LocalDateTime.now().isAfter(LocalDateTime.parse(state.task.finishAt))) {
                                         Toast.makeText(context, "This task is already in the past", Toast.LENGTH_SHORT).show()
                                     } else {
                                         Toast.makeText(context, "Task's status is changed", Toast.LENGTH_SHORT).show()
@@ -224,7 +225,7 @@ fun TaskDetailsScreen(
                             TaskDetailRow(
                                 icon = painterResource(R.drawable.calendar_details),
                                 label = "Date",
-                                value = "28 Apr, 2025"
+                                value = getFormattedDateFromString(state.task.startAt)
                             )
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
