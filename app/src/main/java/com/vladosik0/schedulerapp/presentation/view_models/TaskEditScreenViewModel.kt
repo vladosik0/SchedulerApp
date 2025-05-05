@@ -52,7 +52,8 @@ class TaskEditScreenViewModel (
 
             date != null -> {
                 _taskEditScreenUiState.value = TaskEditScreenUiState(
-                    date = parseDateStringToDate(date)
+                    date = parseDateStringToDate(date),
+                    isLoading = false
                 )
             }
 
@@ -62,7 +63,8 @@ class TaskEditScreenViewModel (
                 _taskEditScreenUiState.value = TaskEditScreenUiState(
                     date = parseDateTimeStringToDate(slot),
                     startTime = startTime,
-                    finishTime = startTime.plusMinutes(90)
+                    finishTime = startTime.plusMinutes(90),
+                    isLoading = false
                 )
             }
         }

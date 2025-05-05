@@ -32,6 +32,10 @@ fun SchedulerAppNavigation() {
         composable(
             route = NavigationRoutes.TaskDetailsScreen.route,
             arguments = listOf(navArgument("taskId") { type = NavType.IntType }),
+            enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(600)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(600)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(600)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(600)) }
         ) {
             TaskDetailsScreen(
                 onBackIconClick = { navController.popBackStack() },
@@ -43,7 +47,11 @@ fun SchedulerAppNavigation() {
 
         composable(
             route = NavigationRoutes.TaskEditScreen.route,
-            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+            arguments = listOf(navArgument("taskId") { type = NavType.IntType }),
+            enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(600)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(600)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(600)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(600)) }
         ) {
             TaskEditScreen(onCancel = {navController.popBackStack()})
         }
