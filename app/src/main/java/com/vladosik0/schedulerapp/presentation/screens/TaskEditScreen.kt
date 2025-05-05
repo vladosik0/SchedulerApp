@@ -3,7 +3,6 @@ package com.vladosik0.schedulerapp.presentation.screens
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -66,6 +65,7 @@ import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.validators.isPeriodLogical
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
+import com.vladosik0.schedulerapp.presentation.converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -77,6 +77,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TaskEditScreen(
     onCancel: () -> Unit = {},
+    onScheduleBuildButtonClick: (TaskEditScreenUiState) -> Unit = {},
     viewModel: TaskEditScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -171,9 +172,6 @@ fun TaskEditScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Log.d("UI_DEBUG_START", "${initialTask.startTime}")
-                Log.d("UI_DEBUG_FINISH", "${initialTask.finishTime}")
-
                 TimePickerField(
                     "Start", initialTask.startTime, startTimeErrorMessage
                 ) { viewModel.updateStartTime(it) }
@@ -183,6 +181,16 @@ fun TaskEditScreen(
                 TimePickerField(
                     "Finish", initialTask.finishTime, finishTimeErrorMessage
                 ) { viewModel.updateFinishTime(it) }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    enabled = isTaskValid,
+                    onClick = {
+                        onScheduleBuildButtonClick(initialTask)
+                    }) {
+                    Text("Build new schedule")
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 

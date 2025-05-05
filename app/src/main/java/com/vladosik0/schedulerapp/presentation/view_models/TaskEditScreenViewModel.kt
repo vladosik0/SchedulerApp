@@ -122,24 +122,26 @@ class TaskEditScreenViewModel (
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(difficulty = difficulty)
     }
 
+    private fun validateTextFields(): Boolean {
+
+        val title = _taskEditScreenUiState.value.title
+        if((title.length > 50 || title.isBlank())) {
+            return false
+        }
+
+        val description = _taskEditScreenUiState.value.description
+        if((description.length > 250 || description.isBlank())) {
+            return false
+        }
+
+        val category = _taskEditScreenUiState.value.category
+        return !(category.length > 50 || category.isBlank())
+    }
+
     private fun checkTaskValidation() {
         viewModelScope.launch(Dispatchers.IO) {
-            var isValid = true
 
-            val title = _taskEditScreenUiState.value.title
-            if((title.length > 50 || title.isBlank())) {
-                isValid = false
-            }
-
-            val description = _taskEditScreenUiState.value.description
-            if((description.length > 250 || description.isBlank())) {
-                isValid = false
-            }
-
-            val category = _taskEditScreenUiState.value.category
-            if((category.length > 50 || category.isBlank())) {
-                isValid = false
-            }
+            var isValid = validateTextFields()
 
             val startTime = _taskEditScreenUiState.value.startTime
             val finishTime = _taskEditScreenUiState.value.finishTime

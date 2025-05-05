@@ -10,7 +10,10 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.vladosik0.schedulerapp.domain.enums.Difficulty
+import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
+import com.vladosik0.schedulerapp.presentation.screens.BuildScheduleScreen
 import com.vladosik0.schedulerapp.presentation.screens.DateScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskDetailsScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskEditScreen
@@ -69,7 +72,36 @@ fun SchedulerAppNavigation() {
                 type = NavType.StringType
             })
         ) {
-            TaskEditScreen(onCancel = { navController.popBackStack() })
+            TaskEditScreen(
+                onCancel = { navController.popBackStack() },
+                onScheduleBuildButtonClick = { uiState ->
+                    navController.navigate(NavigationRoutes.BuildScheduleScreen.createRoute(
+                        taskId = uiState.id,
+                        title = uiState.title,
+                        description = uiState.description,
+                        category = uiState.category,
+                        difficulty = if(uiState.difficulty == Difficulty.HIGH) 2 else 1,
+                        priority = if(uiState.priority == Priority.HIGH) 2 else 1
+                    )
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = NavigationRoutes.BuildScheduleScreen.route
+        ) {
+            BuildScheduleScreen(
+                onCancel = { navController.popBackStack() },
+                onSave = {
+                    navController.navigate(NavigationRoutes.DateScreen.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = false
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
     }
 }

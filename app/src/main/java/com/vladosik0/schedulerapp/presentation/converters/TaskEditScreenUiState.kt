@@ -9,6 +9,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 data class TaskEditScreenUiState(
+    val id: Int = 0,
     val date: LocalDate = LocalDate.now(),
     val startTime: LocalTime = LocalTime.now(),
     val finishTime: LocalTime = LocalTime.now().plusMinutes(30),
@@ -32,6 +33,7 @@ fun TaskEditScreenUiState.toTask(id: Int = 0): Task = Task(
 )
 
 fun Task.toEditTaskScreenUiState(): TaskEditScreenUiState = TaskEditScreenUiState(
+    id = id,
     date = parseDateTimeStringToDate(startAt),
     startTime = parseDateTimeStringToTime(startAt),
     finishTime = parseDateTimeStringToTime(finishAt),

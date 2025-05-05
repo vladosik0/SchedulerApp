@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.vladosik0.schedulerapp.SchedulerApplication
+import com.vladosik0.schedulerapp.presentation.view_models.BuildScheduleScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.DateScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
@@ -25,6 +26,12 @@ object AppViewModelProvider {
         }
         initializer {
             TaskEditScreenViewModel(
+                tasksRepository = schedulerApplication().container.tasksRepository,
+                savedStateHandle = this.createSavedStateHandle()
+            )
+        }
+        initializer {
+            BuildScheduleScreenViewModel(
                 tasksRepository = schedulerApplication().container.tasksRepository,
                 savedStateHandle = this.createSavedStateHandle()
             )
