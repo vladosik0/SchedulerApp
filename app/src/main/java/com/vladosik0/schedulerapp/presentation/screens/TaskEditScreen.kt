@@ -55,6 +55,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
@@ -249,9 +250,13 @@ fun TaskEditScreen(
                 Text(
                     text = saveTaskErrorMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround
