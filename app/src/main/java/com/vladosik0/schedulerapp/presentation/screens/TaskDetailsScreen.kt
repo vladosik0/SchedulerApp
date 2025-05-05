@@ -149,7 +149,10 @@ fun TaskDetailsScreen(
                                 }
                                 SmallActionButton(
                                     icon = Icons.Default.Edit, label = "Edit"
-                                ) { onEditIconClick(state.task.id) }
+                                ) {
+                                    onEditIconClick(state.task.id)
+                                    expanded = !expanded
+                                }
                             }
                         }
                         FloatingActionButton(
