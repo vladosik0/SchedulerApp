@@ -7,6 +7,7 @@ import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.converters.toTask
 import com.vladosik0.schedulerapp.presentation.converters.toTaskUiStateElement
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +23,8 @@ class TaskDetailsScreenViewModel(
 
     init {
         if(taskId != null) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
+                delay(500)
                 tasksRepository.getTaskStream(taskId)
                     .map { TaskDetailsUiState.Success(it?.toTaskUiStateElement() ?: TaskUiStateElement()) }
                     .collect { _taskDetailsUiState.value = it }
@@ -38,7 +40,7 @@ class TaskDetailsScreenViewModel(
             viewModelScope.launch {
                 tasksRepository.deleteTask(currentState.task.toTask())
                 _taskDetailsUiState.value = TaskDetailsUiState.Loading
-                delay(200)
+                delay(500)
                 onDeleted()
             }
         }
@@ -49,7 +51,7 @@ class TaskDetailsScreenViewModel(
         if(currentState is TaskDetailsUiState.Success) {
             val updatedTask = currentState.task.copy(isDone = !currentState.task.isDone)
             _taskDetailsUiState.value = TaskDetailsUiState.Success(task = updatedTask)
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 tasksRepository.updateTask(task = updatedTask.toTask())
             }
         }

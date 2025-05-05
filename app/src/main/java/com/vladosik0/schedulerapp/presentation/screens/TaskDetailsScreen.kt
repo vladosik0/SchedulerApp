@@ -83,7 +83,14 @@ fun TaskDetailsScreen(
     onEditIconClick: (Int) -> Unit
 ) {
     when (val state = viewModel.taskDetailsUiState.collectAsState().value) {
-        is TaskDetailsUiState.Loading -> CircularProgressIndicator()
+        is TaskDetailsUiState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(36.dp))
+            }
+        }
         is TaskDetailsUiState.Success -> {
             val context = LocalContext.current
             var showDeleteDialog by rememberSaveable { mutableStateOf(false) }

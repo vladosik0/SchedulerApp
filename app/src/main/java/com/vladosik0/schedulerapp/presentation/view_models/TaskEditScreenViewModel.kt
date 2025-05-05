@@ -12,6 +12,7 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.presentation.converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toEditTaskScreenUiState
 import com.vladosik0.schedulerapp.presentation.converters.toTask
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -38,7 +39,7 @@ class TaskEditScreenViewModel (
     init {
         when {
             taskId != null -> {
-                viewModelScope.launch {
+                viewModelScope.launch(Dispatchers.IO) {
                     tasksRepository.getTaskStream(taskId)
                         .map { it?.toEditTaskScreenUiState() ?: TaskEditScreenUiState() }
                         .collect { _taskEditScreenUiState.value = it }
@@ -116,8 +117,7 @@ class TaskEditScreenViewModel (
     }
 
     private fun checkTaskValidation() {
-        viewModelScope.launch {
-
+        viewModelScope.launch(Dispatchers.IO) {
             var isValid = true
 
             val title = _taskEditScreenUiState.value.title
@@ -171,7 +171,7 @@ class TaskEditScreenViewModel (
     }
 
     fun saveTask() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (taskId != null) {
                 tasksRepository.updateTask(_taskEditScreenUiState.value.toTask(taskId.toInt()))
             } else {
