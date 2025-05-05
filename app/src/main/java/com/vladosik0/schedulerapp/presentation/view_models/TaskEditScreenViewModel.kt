@@ -184,7 +184,7 @@ class TaskEditScreenViewModel (
                 tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
             }
             _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(isLoading = true)
-            delay(200)
+            delay(500)
         }
     }
     //updateIsNotified

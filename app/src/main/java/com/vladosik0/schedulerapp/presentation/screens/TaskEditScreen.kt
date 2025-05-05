@@ -267,7 +267,7 @@ fun TaskEditScreen(
                     Button(
                         enabled = isTaskValid, onClick = {
                             viewModel.saveTask()
-                            Toast.makeText(context, "Task created successfully", Toast.LENGTH_SHORT)
+                            Toast.makeText(context, "Task saved successfully", Toast.LENGTH_SHORT)
                                 .show()
                             onCancel()
                         }) {
