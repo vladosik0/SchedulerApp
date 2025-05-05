@@ -63,12 +63,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.domain.formatters.formatDuration
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedDateFromString
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
+import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsUiState
 import java.time.LocalDateTime
@@ -76,7 +78,7 @@ import java.time.LocalDateTime
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
-    viewModel: TaskDetailsScreenViewModel,
+    viewModel: TaskDetailsScreenViewModel = viewModel(factory = AppViewModelProvider.Factory),
     onBackIconClick: () -> Unit,
     onEditIconClick: (Int) -> Unit
 ) {

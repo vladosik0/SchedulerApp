@@ -57,10 +57,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.validators.isPeriodLogical
+import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -72,7 +74,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TaskEditScreen(
     onCancel: () -> Unit = {},
-    viewModel: TaskEditScreenViewModel
+    viewModel: TaskEditScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
