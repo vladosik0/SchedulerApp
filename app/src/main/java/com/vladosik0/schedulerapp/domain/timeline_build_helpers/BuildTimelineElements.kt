@@ -6,6 +6,7 @@ import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalDateTime, selectedDate: LocalDate): List<TimelineElement> {
     val sortedTasks = tasks.sortedBy { parseDateTimeStringToTime(it.startAt) }
@@ -63,7 +64,7 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalDateTime, s
             nowMarkerPlaced = true
         }
 
-        val status = getEventStatus(
+        val status = if(task.isDone) EventStatus.PAST else getEventStatus(
             LocalDateTime.parse(task.startAt),
             LocalDateTime.parse(task.finishAt),
             now
@@ -80,9 +81,11 @@ fun buildTimelineElements(tasks: List<TaskUiStateElement>, now: LocalDateTime, s
 
     if (previousEndTime != null && previousEndTime < dayEnd) {
         val eventStatus = getEventStatus(previousEndTime, dayEnd, now)
+        previousEndTime = LocalDateTime.parse(previousEndTime.toString())
+        val parsedPreviousEndTime = previousEndTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))
         result.add(
             TimelineElement.FreeSlot(
-                start = previousEndTime.toString(),
+                start = parsedPreviousEndTime,
                 finish = dayEnd.toString(),
                 status = eventStatus
             )
@@ -108,6 +111,9 @@ fun getEventStatus(startAt: LocalDateTime, finishAt: LocalDateTime, now: LocalDa
 
 // --- Get event status based on time
 fun getEventStatus(startAt: String, finishAt: String): String {
+    if(startAt == "" || finishAt == "") {
+        return ""
+    }
     val now = LocalDateTime.now()
     val startTime = LocalDateTime.parse(startAt)
     val finishTime = LocalDateTime.parse(finishAt)
