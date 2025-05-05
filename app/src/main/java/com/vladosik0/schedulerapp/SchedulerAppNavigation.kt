@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -17,17 +16,13 @@ import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import com.vladosik0.schedulerapp.presentation.screens.DateScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskDetailsScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskEditScreen
-import com.vladosik0.schedulerapp.presentation.view_models.SchedulerAppNavigationViewModel
+import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SchedulerAppNavigation(
-    viewModel: SchedulerAppNavigationViewModel = viewModel(factory = AppViewModelProvider.Factory)
-) {
+fun SchedulerAppNavigation() {
     val navController = rememberAnimatedNavController()
-    val task = viewModel.editedTaskUiStateElement.collectAsState()
-
     AnimatedNavHost(
         navController = navController,
         startDestination = NavigationRoutes.DateScreen.route,
@@ -41,17 +36,18 @@ fun SchedulerAppNavigation(
         composable(
             route = NavigationRoutes.TaskDetailsScreen.route,
             arguments = listOf(navArgument("taskId") { type = NavType.IntType }),
-        ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
-            viewModel.updateUiStateById(taskId)
+        ) {
+            val taskDetailsScreenViewModel: TaskDetailsScreenViewModel = viewModel(
+                factory = AppViewModelProvider.Factory
+            )
             TaskDetailsScreen(
-                task = task.value,
+                viewModel = taskDetailsScreenViewModel,
                 onBackIconClick = { navController.popBackStack() },
                 onEditIconClick = {
-                    navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(task.value.id))
+                    navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(taskDetailsScreenViewModel.taskDetailsUiStateElement.value.id))
                 },
-                onDeleteIconClick = { viewModel.deleteTask() },
-                onCompleteIconClick = {viewModel.updateTaskStatus()}
+                onDeleteIconClick = { taskDetailsScreenViewModel.deleteTask() },
+                onCompleteIconClick = {taskDetailsScreenViewModel.updateTaskStatus()}
             )
         }
 

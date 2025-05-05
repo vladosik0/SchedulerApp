@@ -7,19 +7,20 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.vladosik0.schedulerapp.SchedulerApplication
 import com.vladosik0.schedulerapp.presentation.view_models.DateScreenViewModel
-import com.vladosik0.schedulerapp.presentation.view_models.SchedulerAppNavigationViewModel
+import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsScreenViewModel
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
-            SchedulerAppNavigationViewModel(
+            DateScreenViewModel(
                 tasksRepository = schedulerApplication().container.tasksRepository
             )
         }
         initializer {
-            DateScreenViewModel(
-                tasksRepository = schedulerApplication().container.tasksRepository
+            TaskDetailsScreenViewModel(
+                tasksRepository = schedulerApplication().container.tasksRepository,
+                savedStateHandle = this.createSavedStateHandle()
             )
         }
         initializer {

@@ -26,7 +26,7 @@ class TaskEditScreenViewModel (
     savedStateHandle: SavedStateHandle
 ): ViewModel() {
 
-    private val taskId: String? = savedStateHandle["taskId"]
+    private val taskId: Int? = savedStateHandle["taskId"]
 
     private val date: String? = savedStateHandle["date"]
 
@@ -39,7 +39,7 @@ class TaskEditScreenViewModel (
         when {
             taskId != null -> {
                 viewModelScope.launch {
-                    tasksRepository.getTaskStream(taskId.toInt())
+                    tasksRepository.getTaskStream(taskId)
                         .map { it?.toEditTaskScreenUiState() ?: TaskEditScreenUiState() }
                         .collect { _taskEditScreenUiState.value = it }
                 }

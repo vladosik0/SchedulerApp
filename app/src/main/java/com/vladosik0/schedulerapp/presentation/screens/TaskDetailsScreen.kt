@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -44,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,13 +62,15 @@ import androidx.compose.ui.unit.dp
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.domain.formatters.formatDuration
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
+import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.getEventStatus
-import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsScreenViewModel
+import com.vladosik0.schedulerapp.presentation.view_models.TaskDetailsUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
-    task: TaskUiStateElement,
+    viewModel: TaskDetailsScreenViewModel,
     onBackIconClick: () -> Unit,
     onEditIconClick: () -> Unit,
     onDeleteIconClick: () -> Unit,
@@ -149,87 +153,92 @@ fun TaskDetailsScreen(
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(16.dp)
-                .alpha(backgroundAlpha)
-        ) {
-            Text(
-                text = task.title + formatDuration(task.startAt, task.finishAt),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-
-            Text(
-                text = "Category: ${task.category}",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.elevatedCardElevation()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    TaskDetailRow(
-                        icon = painterResource(R.drawable.calendar_details),
-                        label = "Date",
-                        value = "28 Apr, 2025"
+        when (val state = viewModel.taskDetailsUiState.collectAsState().value) {
+            is TaskDetailsUiState.Loading -> CircularProgressIndicator()
+            is TaskDetailsUiState.Success -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                        .alpha(backgroundAlpha)
+                ) {
+                    Text(
+                        text = "${state.task.title}, ${formatDuration(state.task.startAt, state.task.finishAt)}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                    TaskDetailRow(
-                        icon = painterResource(R.drawable.clock),
-                        label = "Time",
-                        value = "${getFormattedTime(task.startAt)} - ${getFormattedTime(task.finishAt)}"
+                    Text(
+                        text = "Category: ${state.task.category}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                    TaskDetailRow(
-                        icon = painterResource(R.drawable.status),
-                        label = "Status",
-                        value = getEventStatus(task.startAt, task.finishAt)
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.elevatedCardElevation()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            TaskDetailRow(
+                                icon = painterResource(R.drawable.calendar_details),
+                                label = "Date",
+                                value = "28 Apr, 2025"
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            TaskDetailRow(
+                                icon = painterResource(R.drawable.clock),
+                                label = "Time",
+                                value = "${getFormattedTime(state.task.startAt)} - ${getFormattedTime(state.task.finishAt)}"
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            TaskDetailRow(
+                                icon = painterResource(R.drawable.status),
+                                label = "Status",
+                                value = getEventStatus(state.task.startAt, state.task.finishAt)
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            TaskDetailRow(
+                                icon = painterResource(R.drawable.priority),
+                                label = "Priority",
+                                value = state.task.priority.name.toPrettyFormat()
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            TaskDetailRow(
+                                icon = painterResource(R.drawable.difficulty),
+                                label = "Difficulty",
+                                value = state.task.difficulty.name.toPrettyFormat()
+                            )
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                            TaskDetailRow(
+                                icon = painterResource(R.drawable.notification),
+                                label = "Notification",
+                                value = if(state.task.isNotified) "On" else "Off"
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Description",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
                     )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    TaskDetailRow(
-                        icon = painterResource(R.drawable.priority),
-                        label = "Priority",
-                        value = task.priority.name.lowercase().replaceFirstChar { it.titlecase() }
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    TaskDetailRow(
-                        icon = painterResource(R.drawable.difficulty),
-                        label = "Difficulty",
-                        value = task.difficulty.name.lowercase().replaceFirstChar { it.titlecase() }
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    TaskDetailRow(
-                        icon = painterResource(R.drawable.notification),
-                        label = "Notification",
-                        value = if(task.isNotified) "On" else "Off"
+                    Text(
+                        text = if(state.task.description.isNullOrBlank()) "No description" else state.task.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
-                Text(
-                    text = "Description",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-                )
-                Text(
-                    text = if(task.description.isNullOrBlank()) "No description" else "Staying focused on your goals each day builds the foundation for long-term success. Small consistent actions matter more than short bursts of inspiration. Trust the process, stay curious, and remember that persistence always beats perfection. Every great achievement starts with a decision to try. Challenges will come, but each obstacle is a chance to grow stronger. Keep learning, stay positive, and believe in your ability to shape the future you dream about. Small steps create big changes.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                )
         }
     }
 }

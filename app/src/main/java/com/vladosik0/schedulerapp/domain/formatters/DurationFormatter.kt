@@ -11,7 +11,7 @@ fun formatDuration(startTimeString: String, finishTimeString: String): String {
     val remainingMinutes = minutes % 60
 
     return buildString {
-        if(hours > 0) append(" ${hours}h ")
+        if(hours > 0) append("${hours}h ")
         if(remainingMinutes > 0) append ("${remainingMinutes}min")
     }
 }

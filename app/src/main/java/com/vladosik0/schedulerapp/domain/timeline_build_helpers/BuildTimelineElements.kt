@@ -108,9 +108,9 @@ fun getEventStatus(startAt: LocalDateTime, finishAt: LocalDateTime, now: LocalDa
 
 // --- Get event status based on time
 fun getEventStatus(startAt: String, finishAt: String): String {
-    val now = LocalTime.now()
-    val startTime = parseDateTimeStringToTime(startAt)
-    val finishTime = parseDateTimeStringToTime(finishAt)
+    val now = LocalDateTime.now()
+    val startTime = LocalDateTime.parse(startAt)
+    val finishTime = LocalDateTime.parse(finishAt)
 
     return when {
         now.isBefore(startTime) -> "Planned"
