@@ -93,7 +93,7 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.TimelineElement
 import com.vladosik0.schedulerapp.domain.timeline_build_helpers.buildTimelineElements
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
-import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import com.vladosik0.schedulerapp.presentation.view_models.DateScreenViewModel
 import kotlinx.coroutines.delay

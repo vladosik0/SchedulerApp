@@ -56,29 +56,13 @@ fun SchedulerAppNavigation() {
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(600)) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(600)) }
         ) {
-            TaskEditScreen(onCancel = {navController.popBackStack()})
-        }
-
-        composable(
-            route = NavigationRoutes.TaskCreateScreen.route,
-            arguments = listOf(navArgument("date") { type = NavType.StringType })
-        ) {
-            TaskEditScreen(onCancel = { navController.popBackStack() })
-        }
-
-        composable(
-            route = NavigationRoutes.TaskCreateForFreeSlotScreen.route,
-            arguments = listOf(navArgument("slot") {
-                type = NavType.StringType
-            })
-        ) {
             TaskEditScreen(
-                onCancel = { navController.popBackStack() },
+                onCancel = {navController.popBackStack()},
                 onScheduleBuildButtonClick = { uiState ->
                     navController.navigate(NavigationRoutes.BuildScheduleScreen.createRoute(
                         taskId = uiState.id,
                         title = uiState.title,
-                        description = uiState.description,
+                        description = if(uiState.description == "") "No Description" else uiState.description,
                         category = uiState.category,
                         difficulty = if(uiState.difficulty == Difficulty.HIGH) 2 else 1,
                         priority = if(uiState.priority == Priority.HIGH) 2 else 1
@@ -89,7 +73,55 @@ fun SchedulerAppNavigation() {
         }
 
         composable(
-            route = NavigationRoutes.BuildScheduleScreen.route
+            route = NavigationRoutes.TaskCreateScreen.route,
+            arguments = listOf(navArgument("date") { type = NavType.StringType })
+        ) {
+            TaskEditScreen(
+                onCancel = { navController.popBackStack() },
+                onScheduleBuildButtonClick = { uiState ->
+                    navController.navigate(NavigationRoutes.BuildScheduleScreen.createRoute(
+                        taskId = uiState.id,
+                        title = uiState.title,
+                        description = if(uiState.description == "") "No Description" else uiState.description,
+                        category = uiState.category,
+                        difficulty = if(uiState.difficulty == Difficulty.HIGH) 2 else 1,
+                        priority = if(uiState.priority == Priority.HIGH) 2 else 1
+                    )
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = NavigationRoutes.TaskCreateForFreeSlotScreen.route,
+            arguments = listOf(navArgument("slot") { type = NavType.StringType })
+        ) {
+            TaskEditScreen(
+                onCancel = { navController.popBackStack() },
+                onScheduleBuildButtonClick = { uiState ->
+                    navController.navigate(NavigationRoutes.BuildScheduleScreen.createRoute(
+                        taskId = uiState.id,
+                        title = uiState.title,
+                        description = if(uiState.description == "") "No Description" else uiState.description,
+                        category = uiState.category,
+                        difficulty = if(uiState.difficulty == Difficulty.HIGH) 2 else 1,
+                        priority = if(uiState.priority == Priority.HIGH) 2 else 1
+                    )
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = NavigationRoutes.BuildScheduleScreen.route,
+            arguments = listOf(
+                navArgument("taskId") { type = NavType.IntType },
+                navArgument("title") { type = NavType.StringType },
+                navArgument("description") { type = NavType.StringType },
+                navArgument("category") { type = NavType.StringType },
+                navArgument("difficulty") { type = NavType.IntType },
+                navArgument("priority") { type = NavType.IntType },
+                )
         ) {
             BuildScheduleScreen(
                 onCancel = { navController.popBackStack() },

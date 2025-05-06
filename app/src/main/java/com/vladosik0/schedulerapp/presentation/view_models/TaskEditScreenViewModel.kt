@@ -9,9 +9,9 @@ import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.parsers.parseDateStringToDate
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToDate
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
-import com.vladosik0.schedulerapp.presentation.converters.TaskEditScreenUiState
-import com.vladosik0.schedulerapp.presentation.converters.toEditTaskScreenUiState
-import com.vladosik0.schedulerapp.presentation.converters.toTask
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskEditScreenUiState
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.toEditTaskScreenUiState
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTask
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -81,22 +81,25 @@ class TaskEditScreenViewModel (
     private val _saveTaskErrorMessage = MutableStateFlow("")
     val saveTaskErrorMessage: StateFlow<String> = _saveTaskErrorMessage
 
-    private val _isTaskValid = MutableStateFlow(false)
+    private val _isTaskValid = MutableStateFlow(taskId != null)
     val isTaskValid: StateFlow<Boolean> = _isTaskValid
+
+    private val _areTextFieldsValid = MutableStateFlow(false)
+    val areTextFieldsValid: StateFlow<Boolean> = _areTextFieldsValid
 
     fun updateTitle(title: String) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(title = title)
-        checkTaskValidation()
+        validateTextFields()
     }
 
     fun updateDescription(description: String) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(description = description)
-        checkTaskValidation()
+        validateTextFields()
     }
 
     fun updateCategory(category: String) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(category = category)
-        checkTaskValidation()
+        validateTextFields()
     }
 
     fun updateDate(date: LocalDate) {
@@ -122,26 +125,22 @@ class TaskEditScreenViewModel (
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(difficulty = difficulty)
     }
 
-    private fun validateTextFields(): Boolean {
+    fun validateTextFields() {
 
         val title = _taskEditScreenUiState.value.title
-        if((title.length > 50 || title.isBlank())) {
-            return false
-        }
+        _areTextFieldsValid.value = !(title.length > 50 || title.isBlank())
 
         val description = _taskEditScreenUiState.value.description
-        if((description.length > 250 || description.isBlank())) {
-            return false
-        }
+        _areTextFieldsValid.value = description.length <= 250
 
         val category = _taskEditScreenUiState.value.category
-        return !(category.length > 50 || category.isBlank())
+        _areTextFieldsValid.value = !(category.length > 50 || category.isBlank())
     }
 
     private fun checkTaskValidation() {
         viewModelScope.launch(Dispatchers.IO) {
 
-            var isValid = validateTextFields()
+            var isValid = _areTextFieldsValid.value
 
             val startTime = _taskEditScreenUiState.value.startTime
             val finishTime = _taskEditScreenUiState.value.finishTime

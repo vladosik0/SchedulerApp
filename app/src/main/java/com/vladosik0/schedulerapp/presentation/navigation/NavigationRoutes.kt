@@ -22,7 +22,9 @@ sealed class NavigationRoutes(val route: String) {
         fun createRoute(slot: String?) = "task_create_free_screen?slot=${slot ?: ""}"
     }
 
-    object BuildScheduleScreen : NavigationRoutes("build_schedule_screen") {
+    object BuildScheduleScreen : NavigationRoutes(
+        "build_schedule_screen/{taskId}/{title}/{category}/{description}/{difficulty}/{priority}"
+    ) {
         fun createRoute(
             taskId: Int,
             title: String,
@@ -30,6 +32,6 @@ sealed class NavigationRoutes(val route: String) {
             description: String,
             difficulty: Int,
             priority: Int
-        ) = "build_schedule_screen/$taskId/$title/$category$description$difficulty$priority"
+        ) = "build_schedule_screen/${taskId}/${title}/${category}/${description}/${difficulty}/${priority}"
     }
 }

@@ -3,23 +3,36 @@ package com.vladosik0.schedulerapp.presentation.view_models
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
+import com.vladosik0.schedulerapp.domain.enums.Difficulty
+import com.vladosik0.schedulerapp.domain.enums.Priority
 
 class BuildScheduleScreenViewModel(
     tasksRepository: TasksRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    val taskId: Int? = savedStateHandle["taskId"]
+    private val taskId: Int? = savedStateHandle["taskId"]
 
-    val title: String? = savedStateHandle["title"]
+    private val title: String? = savedStateHandle["title"]
 
-    val description: String? = savedStateHandle["description"]
+    private val description: String? = savedStateHandle["description"]
 
-    val category: String? = savedStateHandle["category"]
+    private val category: String? = savedStateHandle["category"]
 
-    val priority: Int? = savedStateHandle["priority"]
+    private val priority: Int? = savedStateHandle["priority"]
 
-    val difficulty: Int? = savedStateHandle["difficulty"]
+    private val difficulty: Int? = savedStateHandle["difficulty"]
+
+    fun getTitle() : String = title.toString()
+
+    fun getDescription() : String = description.toString()
+
+    fun getCategory(): String = category.toString()
+
+    fun getPriority(): Priority = if(priority == 1) Priority.LOW else Priority.HIGH
+
+    fun getDifficulty(): Difficulty = if(difficulty == 1) Difficulty.NORMAL else Difficulty.HIGH
+
 
 
 

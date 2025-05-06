@@ -2,7 +2,7 @@ package com.vladosik0.schedulerapp.domain.timeline_build_helpers
 
 import com.vladosik0.schedulerapp.domain.enums.EventStatus
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
-import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

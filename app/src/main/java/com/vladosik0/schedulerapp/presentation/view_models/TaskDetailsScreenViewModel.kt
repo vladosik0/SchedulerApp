@@ -4,9 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
-import com.vladosik0.schedulerapp.presentation.converters.TaskUiStateElement
-import com.vladosik0.schedulerapp.presentation.converters.toTask
-import com.vladosik0.schedulerapp.presentation.converters.toTaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTask
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTaskUiStateElement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

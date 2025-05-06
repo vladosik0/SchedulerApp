@@ -1,4 +1,4 @@
-package com.vladosik0.schedulerapp.presentation.converters
+package com.vladosik0.schedulerapp.presentation.ui_state_converters
 
 import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.enums.Difficulty

@@ -65,7 +65,7 @@ import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.domain.validators.isPeriodLogical
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
-import com.vladosik0.schedulerapp.presentation.converters.TaskEditScreenUiState
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -94,6 +94,7 @@ fun TaskEditScreen(
     val saveTaskErrorMessage by viewModel.saveTaskErrorMessage.collectAsState()
 
     val isTaskValid by viewModel.isTaskValid.collectAsState()
+    val areTextFieldsValid by viewModel.areTextFieldsValid.collectAsState()
 
     if(initialTask.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -184,12 +185,13 @@ fun TaskEditScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Button(
-                    enabled = isTaskValid,
-                    onClick = {
-                        onScheduleBuildButtonClick(initialTask)
-                    }) {
-                    Text("Build new schedule")
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Button(
+                        enabled = areTextFieldsValid,
+                        onClick = { onScheduleBuildButtonClick(initialTask) }
+                    ) {
+                        Text("Get recommended time")
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
