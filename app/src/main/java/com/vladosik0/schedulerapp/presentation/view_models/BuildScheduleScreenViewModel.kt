@@ -7,6 +7,8 @@ import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getDateWorkloads
+import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getNextKeyBySortedValue
+import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getPreviousKeyBySortedValue
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -55,6 +57,9 @@ class BuildScheduleScreenViewModel(
 
     private val _finishDateErrorMessage = MutableStateFlow("")
     val finishDateErrorMessage: StateFlow<String> = _finishDateErrorMessage
+
+    private val _dateOutOfRangeErrorMessage = MutableStateFlow("")
+    val dateOutOfRangeErrorMessage: StateFlow<String> = _dateOutOfRangeErrorMessage
 
     private val dateWorkLoads = mutableMapOf<LocalDate, Int>()
 
@@ -110,5 +115,20 @@ class BuildScheduleScreenViewModel(
 
     fun isTextFieldEnabled(): Boolean {
         return dateWorkLoads.isNotEmpty()
+    }
+
+    fun getNextRecommendedDate() {
+        val nextDate = getNextKeyBySortedValue(dateWorkLoads, _buildScheduleScreenUiState.value.recommendedDate)
+        if(nextDate == _buildScheduleScreenUiState.value.recommendedDate) {
+            _dateOutOfRangeErrorMessage.value = "You've reached the date range boundary!"
+        } else {
+            _buildScheduleScreenUiState.update { it.copy(recommendedDate = nextDate) }
+            _dateOutOfRangeErrorMessage.value = ""
+        }
+    }
+
+    fun getPreviousRecommendedDate() {
+        val previousDate = getPreviousKeyBySortedValue(dateWorkLoads, _buildScheduleScreenUiState.value.recommendedDate)
+        _buildScheduleScreenUiState.update { it.copy(recommendedDate = previousDate) }
     }
 }

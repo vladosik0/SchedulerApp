@@ -22,3 +22,25 @@ fun getDateWorkloads(
 
     return dateRangeWorkLoad.toList().sortedBy {it.second}.toMap()
 }
+
+fun <K, V : Comparable<V>> getNextKeyBySortedValue(map: Map<K, V>, currentKey: K): K {
+    val sortedKeys = map.entries
+        .sortedBy { it.value }
+        .map { it.key }
+
+    val currentIndex = sortedKeys.indexOf(currentKey)
+    return if (currentIndex != -1 && currentIndex + 1 < sortedKeys.size) {
+        sortedKeys[currentIndex + 1]
+    } else currentKey
+}
+
+fun <K, V : Comparable<V>> getPreviousKeyBySortedValue(map: Map<K, V>, currentKey: K): K {
+    val sortedKeys = map.entries
+        .sortedBy { it.value }
+        .map { it.key }
+
+    val currentIndex = sortedKeys.indexOf(currentKey)
+    return if (currentIndex > 0) {
+        sortedKeys[currentIndex - 1]
+    } else currentKey
+}

@@ -1,7 +1,9 @@
 package com.vladosik0.schedulerapp.presentation.screens
 
-import androidx.compose.foundation.layout.Box
+import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.key
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -42,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
 import com.vladosik0.schedulerapp.presentation.view_models.BuildScheduleScreenViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -59,8 +65,12 @@ fun BuildScheduleScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val buildScheduleScreenUiState by viewModel.buildScheduleScreenUiState.collectAsState()
 
+    Log.d("UI_DEBUG_SCREEN", "${buildScheduleScreenUiState.startDate}")
+
     val startDateErrorMessage by viewModel.startDateErrorMessage.collectAsState()
     val finishDateErrorMessage by viewModel.finishDateErrorMessage.collectAsState()
+    val dateOutOfRangeErrorMessage by viewModel.dateOutOfRangeErrorMessage.collectAsState()
+
 
     Scaffold(
         topBar = {
@@ -137,16 +147,43 @@ fun BuildScheduleScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             DatePickerWithIconField(
-                startDate = buildScheduleScreenUiState.startDate,
-                finishDate = buildScheduleScreenUiState.finishDate,
-                initialDate = buildScheduleScreenUiState.recommendedDate,
+                buildScheduleScreenUiState = buildScheduleScreenUiState,
                 isEnabled = viewModel.isTextFieldEnabled()
             ) {
                 viewModel.updateRecommendedDate(it)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            if (dateOutOfRangeErrorMessage != "") {
+                Text(
+                    text = dateOutOfRangeErrorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                    IconButton(
+                        onClick = { viewModel.getPreviousRecommendedDate() },
+                        enabled = viewModel.isTextFieldEnabled()
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = "Get previous recommended date"
+                        )
+                    }
+                    IconButton(
+                        onClick = { viewModel.getNextRecommendedDate() },
+                        enabled = viewModel.isTextFieldEnabled()
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = "Get next recommended date"
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Button(
                     onClick = {
                         if (startDateErrorMessage == "" && finishDateErrorMessage == "") viewModel.getRecommendedDate()
@@ -161,76 +198,71 @@ fun BuildScheduleScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerWithIconField(
-    startDate: LocalDate,
-    finishDate: LocalDate,
-    initialDate: LocalDate,
+    buildScheduleScreenUiState: BuildScheduleScreenUiState,
     isEnabled: Boolean,
-    onDateSelected: (LocalDate) -> Unit,
+    onDateSelected: (LocalDate) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
-    var selectedDate by remember { mutableStateOf(initialDate) }
+    val startDate = buildScheduleScreenUiState.startDate
+    val finishDate = buildScheduleScreenUiState.finishDate
+    val recommendedDate = buildScheduleScreenUiState.recommendedDate
 
     val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
 
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.systemDefault())
-            ?.toInstant()
-            ?.toEpochMilli(),
-        selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                val date = Instant.ofEpochMilli(utcTimeMillis)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-                return !date.isBefore(startDate) && !date.isAfter(finishDate)
-            }
-        }
-    )
+    key(startDate, finishDate, recommendedDate) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = buildScheduleScreenUiState.recommendedDate.atStartOfDay(
+                ZoneId.systemDefault()
+            )?.toInstant()?.toEpochMilli(), selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    val date = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                    return !date.isBefore(buildScheduleScreenUiState.startDate) && !date.isAfter(
+                        buildScheduleScreenUiState.finishDate
+                    )
+                }
+            })
 
-    if (showDialog) {
-        DatePickerDialog(
-            onDismissRequest = { showDialog = false },
-            confirmButton = {
+        if (showDialog) {
+            DatePickerDialog(onDismissRequest = { showDialog = false }, confirmButton = {
                 TextButton(
                     onClick = {
                         val millis = datePickerState.selectedDateMillis
                         if (millis != null) {
-                            val pickedDate = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                            selectedDate = pickedDate
+                            val pickedDate =
+                                Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
                             onDateSelected(pickedDate)
                         }
                         showDialog = false
-                    }
-                ) {
+                    }) {
                     Text("OK")
                 }
-            },
-            dismissButton = {
+            }, dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
                     Text("Cancel")
                 }
+            }) {
+                DatePicker(state = datePickerState)
             }
-        ) {
-            DatePicker(state = datePickerState)
         }
-    }
 
-    OutlinedTextField(
-        value = selectedDate.format(dateFormatter) ?: "",
-        onValueChange = {},
-        label = { Text("Recommended Date") },
-        readOnly = true,
-        enabled = isEnabled,
-        trailingIcon = {
-            IconButton(onClick = { showDialog = true }) {
-                Icon(
-                    painterResource(R.drawable.calendar),
-                    contentDescription = "Pick date",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        },
-        modifier = Modifier.fillMaxWidth()
-    )
+        OutlinedTextField(
+            value = buildScheduleScreenUiState.recommendedDate.format(dateFormatter) ?: "",
+            onValueChange = {},
+            label = { Text("Recommended Date") },
+            readOnly = true,
+            enabled = isEnabled,
+            trailingIcon = {
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(
+                        painterResource(R.drawable.calendar),
+                        contentDescription = "Pick date",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
