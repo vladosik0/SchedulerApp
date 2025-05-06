@@ -125,7 +125,7 @@ class TaskEditScreenViewModel (
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(difficulty = difficulty)
     }
 
-    fun validateTextFields() {
+    private fun validateTextFields() {
 
         val title = _taskEditScreenUiState.value.title
         _areTextFieldsValid.value = !(title.length > 50 || title.isBlank())
@@ -144,13 +144,13 @@ class TaskEditScreenViewModel (
 
             val startTime = _taskEditScreenUiState.value.startTime
             val finishTime = _taskEditScreenUiState.value.finishTime
-            if(startTime.isAfter(finishTime)) {
+            if(startTime.isAfter(finishTime) || startTime == finishTime) {
                 isValid = false
                 _startTimeErrorMessage.value = "Start Time must be before Finish Time"
             } else {
                 _startTimeErrorMessage.value = ""
             }
-            if(finishTime.isBefore(startTime)) {
+            if(finishTime.isBefore(startTime) || finishTime == startTime) {
                 isValid = false
                 _finishTimeErrorMessage.value = "Finish Time must be after Start Time"
             } else {

@@ -169,7 +169,7 @@ fun TaskEditScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                DatePickerField(initialTask.date) { viewModel.updateDate(it) }
+                DatePickerField(selectedDate = initialTask.date) { viewModel.updateDate(it) }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -291,7 +291,9 @@ fun TaskEditScreen(
 
 @Composable
 fun DatePickerField(
+    label: String = "Date",
     selectedDate: LocalDate,
+    errorMessage: String = "",
     onDateSelected: (LocalDate) -> Unit
 ) {
     val context = LocalContext.current
@@ -306,7 +308,7 @@ fun DatePickerField(
                 onDateSelected(parsed)
             }
         },
-        label = { Text("Date") },
+        label = { Text(text = label) },
         trailingIcon = {
             Icon(
                 painter = painterResource(R.drawable.calendar),
@@ -325,9 +327,18 @@ fun DatePickerField(
                     })
         },
         singleLine = true,
+        isError = errorMessage != "",
         modifier = Modifier.fillMaxWidth(),
         readOnly = true
     )
+
+    if(errorMessage != "") {
+        Text(
+            text = errorMessage,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
 }
 
 @Composable
