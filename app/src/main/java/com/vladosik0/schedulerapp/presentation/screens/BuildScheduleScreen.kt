@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
@@ -70,6 +71,9 @@ fun BuildScheduleScreen(
     val startDateErrorMessage by viewModel.startDateErrorMessage.collectAsState()
     val finishDateErrorMessage by viewModel.finishDateErrorMessage.collectAsState()
     val dateOutOfRangeErrorMessage by viewModel.dateOutOfRangeErrorMessage.collectAsState()
+    val startActivityPeriodErrorMessage by viewModel.startActivityPeriodErrorMessage.collectAsState()
+    val finishActivityPeriodErrorMessage by viewModel.finishActivityPeriodErrorMessage.collectAsState()
+
 
 
     Scaffold(
@@ -156,8 +160,10 @@ fun BuildScheduleScreen(
             if (dateOutOfRangeErrorMessage != "") {
                 Text(
                     text = dateOutOfRangeErrorMessage,
+                    textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -191,6 +197,44 @@ fun BuildScheduleScreen(
                     Text(text = "Get recommended date")
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(text = "Get Schedule for Recommended Date", style = MaterialTheme.typography.titleMedium)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TimePickerField(
+                label = "Activity Period Start",
+                selectedTime = buildScheduleScreenUiState.activityPeriodStart,
+                errorMessage = startActivityPeriodErrorMessage,
+            ) { viewModel.updateStartActivityPeriodTime(it) }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TimePickerField(
+                label = "Activity Period Finish",
+                selectedTime = buildScheduleScreenUiState.activityPeriodFinish,
+                errorMessage = finishActivityPeriodErrorMessage,
+            ) { viewModel.updateFinishActivityPeriodTime(it) }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TimePickerField(
+                label = "Desired Task Period Start",
+                selectedTime = buildScheduleScreenUiState.activityPeriodStart,
+                errorMessage = startActivityPeriodErrorMessage,
+            ) { viewModel.updateStartActivityPeriodTime(it) }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TimePickerField(
+                label = "Desired Task Period Finish",
+                selectedTime = buildScheduleScreenUiState.activityPeriodFinish,
+                errorMessage = finishActivityPeriodErrorMessage,
+            ) { viewModel.updateFinishActivityPeriodTime(it) }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

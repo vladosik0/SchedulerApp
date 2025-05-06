@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 class BuildScheduleScreenViewModel(
@@ -60,6 +61,12 @@ class BuildScheduleScreenViewModel(
 
     private val _dateOutOfRangeErrorMessage = MutableStateFlow("")
     val dateOutOfRangeErrorMessage: StateFlow<String> = _dateOutOfRangeErrorMessage
+
+    private val _startActivityPeriodErrorMessage = MutableStateFlow("")
+    val startActivityPeriodErrorMessage: StateFlow<String> = _startActivityPeriodErrorMessage
+
+    private val _finishActivityPeriodErrorMessage = MutableStateFlow("")
+    val finishActivityPeriodErrorMessage: StateFlow<String> = _finishActivityPeriodErrorMessage
 
     private val dateWorkLoads = mutableMapOf<LocalDate, Int>()
 
@@ -130,5 +137,23 @@ class BuildScheduleScreenViewModel(
     fun getPreviousRecommendedDate() {
         val previousDate = getPreviousKeyBySortedValue(dateWorkLoads, _buildScheduleScreenUiState.value.recommendedDate)
         _buildScheduleScreenUiState.update { it.copy(recommendedDate = previousDate) }
+    }
+
+    fun updateStartActivityPeriodTime(startActivityTime: LocalTime) {
+        if(startActivityTime.isAfter(_buildScheduleScreenUiState.value.activityPeriodFinish)){
+            _startActivityPeriodErrorMessage.value = "Start Time must be before Finish Time!"
+        } else {
+            _buildScheduleScreenUiState.update{it.copy(activityPeriodStart = startActivityTime)}
+            _startActivityPeriodErrorMessage.value = ""
+        }
+    }
+
+    fun updateFinishActivityPeriodTime(finishActivityTime: LocalTime) {
+        if(finishActivityTime.isBefore(_buildScheduleScreenUiState.value.activityPeriodStart)){
+            _finishActivityPeriodErrorMessage.value = "Finish Time must be after Start Time!"
+        } else {
+            _buildScheduleScreenUiState.update{it.copy(activityPeriodFinish = finishActivityTime)}
+            _finishActivityPeriodErrorMessage.value = ""
+        }
     }
 }
