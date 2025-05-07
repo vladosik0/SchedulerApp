@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -12,16 +13,23 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
+import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 import com.vladosik0.schedulerapp.presentation.screens.BuildScheduleScreen
 import com.vladosik0.schedulerapp.presentation.screens.DateScreen
+import com.vladosik0.schedulerapp.presentation.screens.NewScheduleScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskDetailsScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskEditScreen
+import com.vladosik0.schedulerapp.presentation.view_models.SharedScheduleScreensViewModel
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SchedulerAppNavigation() {
     val navController = rememberAnimatedNavController()
+    val sharedScheduleScreensViewModel: SharedScheduleScreensViewModel = viewModel(
+        factory = AppViewModelProvider.Factory
+    )
+
     AnimatedNavHost(
         navController = navController,
         startDestination = NavigationRoutes.DateScreen.route,
@@ -124,7 +132,18 @@ fun SchedulerAppNavigation() {
                 )
         ) {
             BuildScheduleScreen(
+                viewModel = sharedScheduleScreensViewModel,
                 onCancel = { navController.popBackStack() },
+                onBuildNewSchedule = {
+                    navController.navigate(NavigationRoutes.NewScheduleScreen.route)
+                }
+            )
+        }
+
+        composable(route = NavigationRoutes.NewScheduleScreen.route) {
+            NewScheduleScreen(
+                viewModel = sharedScheduleScreensViewModel,
+                onCancel = {navController.popBackStack()},
                 onSave = {
                     navController.navigate(NavigationRoutes.DateScreen.route) {
                         popUpTo(navController.graph.startDestinationId) {

@@ -4,6 +4,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 data class BuildScheduleScreenUiState (
+    val newTaskId: Int = 0,
     val startDate: LocalDate = LocalDate.now(),
     val finishDate: LocalDate = LocalDate.now().plusDays(4),
     val recommendedDate: LocalDate = LocalDate.now(),

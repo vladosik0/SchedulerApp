@@ -34,4 +34,6 @@ sealed class NavigationRoutes(val route: String) {
             priority: Int
         ) = "build_schedule_screen/${taskId}/${title}/${category}/${description}/${difficulty}/${priority}"
     }
+
+    object NewScheduleScreen : NavigationRoutes("new_schedule_screen")
 }

@@ -27,7 +27,7 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.time.Duration
 
-class BuildScheduleScreenViewModel(
+class SharedScheduleScreensViewModel(
     private val tasksRepository: TasksRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -57,6 +57,10 @@ class BuildScheduleScreenViewModel(
     private val _buildScheduleScreenUiState = MutableStateFlow(BuildScheduleScreenUiState())
     val buildScheduleScreenUiState: StateFlow<BuildScheduleScreenUiState> =
         _buildScheduleScreenUiState
+
+    init {
+        _buildScheduleScreenUiState.update { it.copy(newTaskId = taskId ?: 0) }
+    }
 
     private val _startDateErrorMessage = MutableStateFlow("")
     val startDateErrorMessage: StateFlow<String> = _startDateErrorMessage
@@ -302,4 +306,14 @@ class BuildScheduleScreenViewModel(
                 considerDesirableExecutionPeriod = !_buildScheduleScreenUiState.value.considerDesirableExecutionPeriod
             ) }
     }
+
+    private val _newScheduleScreenUiState = MutableStateFlow<NewScheduleScreenUiState>(
+        NewScheduleScreenUiState.Loading
+    )
+    val newScheduleScreenUiState: StateFlow<NewScheduleScreenUiState> = _newScheduleScreenUiState
+}
+
+sealed class NewScheduleScreenUiState {
+    object Loading : NewScheduleScreenUiState()
+    data class Success(val tasks: List<TaskUiStateElement>) : NewScheduleScreenUiState()
 }

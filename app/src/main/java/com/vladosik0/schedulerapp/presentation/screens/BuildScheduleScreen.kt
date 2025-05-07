@@ -57,16 +57,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladosik0.schedulerapp.R
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
-import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
-import com.vladosik0.schedulerapp.presentation.view_models.BuildScheduleScreenViewModel
+import com.vladosik0.schedulerapp.presentation.view_models.SharedScheduleScreensViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -76,9 +74,9 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BuildScheduleScreen(
+    viewModel: SharedScheduleScreensViewModel,
     onCancel: () -> Unit,
-    onSave: () -> Unit,
-    viewModel: BuildScheduleScreenViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    onBuildNewSchedule: () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val buildScheduleScreenUiState by viewModel.buildScheduleScreenUiState.collectAsState()
@@ -307,8 +305,7 @@ fun BuildScheduleScreen(
                 Button(
                     enabled = viewModel.isBuildScheduleButtonAvailable(),
                     onClick = {
-                        onSave()
-                        onCancel()
+                        onBuildNewSchedule()
                     }) {
                     Text("Build new schedule")
                 }
