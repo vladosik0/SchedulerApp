@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+import java.time.Duration
 
 class BuildScheduleScreenViewModel(
     private val tasksRepository: TasksRepository,
@@ -43,18 +44,19 @@ class BuildScheduleScreenViewModel(
 
     private val difficulty: Int? = savedStateHandle["difficulty"]
 
-    fun getTitle() : String = title.toString()
+    fun getTitle(): String = title.toString()
 
-    fun getDescription() : String = description.toString()
+    fun getDescription(): String = description.toString()
 
     fun getCategory(): String = category.toString()
 
-    fun getPriority(): Priority = if(priority == 1) Priority.LOW else Priority.HIGH
+    fun getPriority(): Priority = if (priority == 1) Priority.LOW else Priority.HIGH
 
-    fun getDifficulty(): Difficulty = if(difficulty == 1) Difficulty.NORMAL else Difficulty.HIGH
+    fun getDifficulty(): Difficulty = if (difficulty == 1) Difficulty.NORMAL else Difficulty.HIGH
 
     private val _buildScheduleScreenUiState = MutableStateFlow(BuildScheduleScreenUiState())
-    val buildScheduleScreenUiState: StateFlow<BuildScheduleScreenUiState> = _buildScheduleScreenUiState
+    val buildScheduleScreenUiState: StateFlow<BuildScheduleScreenUiState> =
+        _buildScheduleScreenUiState
 
     private val _startDateErrorMessage = MutableStateFlow("")
     val startDateErrorMessage: StateFlow<String> = _startDateErrorMessage
@@ -71,22 +73,31 @@ class BuildScheduleScreenViewModel(
     private val _finishActivityPeriodErrorMessage = MutableStateFlow("")
     val finishActivityPeriodErrorMessage: StateFlow<String> = _finishActivityPeriodErrorMessage
 
+    private val _startDesirablePeriodErrorMessage = MutableStateFlow("")
+    val startDesirablePeriodErrorMessage: StateFlow<String> = _startDesirablePeriodErrorMessage
+
+    private val _finishDesirablePeriodErrorMessage = MutableStateFlow("")
+    val finishDesirablePeriodErrorMessage: StateFlow<String> = _finishDesirablePeriodErrorMessage
+
+    private val _noFreeTimeForNewTaskErrorMessage = MutableStateFlow("")
+    val noFreeTimeForNewTaskErrorMessage: StateFlow<String> = _noFreeTimeForNewTaskErrorMessage
+
     private val dateWorkLoads = mutableMapOf<LocalDate, Int>()
 
     fun updateStartDate(startDate: LocalDate) {
-        if(startDate.isAfter(_buildScheduleScreenUiState.value.finishDate)){
+        if (startDate.isAfter(_buildScheduleScreenUiState.value.finishDate)) {
             _startDateErrorMessage.value = "Start Date must be before Finish Date!"
         } else {
-            _buildScheduleScreenUiState.update{it.copy(startDate = startDate)}
+            _buildScheduleScreenUiState.update { it.copy(startDate = startDate) }
             _startDateErrorMessage.value = ""
         }
     }
 
     fun updateFinishDate(finishDate: LocalDate) {
-        if(finishDate.isBefore(_buildScheduleScreenUiState.value.startDate)){
+        if (finishDate.isBefore(_buildScheduleScreenUiState.value.startDate)) {
             _finishDateErrorMessage.value = "Finish Date must be After Start Date!"
         } else {
-            _buildScheduleScreenUiState.update{it.copy(finishDate = finishDate)}
+            _buildScheduleScreenUiState.update { it.copy(finishDate = finishDate) }
             _startDateErrorMessage.value = ""
         }
     }
@@ -100,7 +111,7 @@ class BuildScheduleScreenViewModel(
             val tasksDateRangeLists = coroutineScope {
                 (0..days).map { offset ->
                     val date = startDate.plusDays(offset).toString()
-                    async{
+                    async {
                         tasksRepository.getTasksByDate(date).first()
                     }
                 }.awaitAll()
@@ -110,20 +121,22 @@ class BuildScheduleScreenViewModel(
                 dateWorkLoads[dateWorkLoad.key] = dateWorkLoad.value
             }
 
-            if(getPriority() == Priority.HIGH && getDifficulty() == Difficulty.NORMAL) {
-                _buildScheduleScreenUiState.update{it.copy(recommendedDate = startDate)}
+            if (getPriority() == Priority.HIGH && getDifficulty() == Difficulty.NORMAL) {
+                _buildScheduleScreenUiState.update { it.copy(recommendedDate = startDate) }
             } else {
-                _buildScheduleScreenUiState.update{it.copy(recommendedDate = dateWorkLoads.entries.first().key)}
+                _buildScheduleScreenUiState.update { it.copy(recommendedDate = dateWorkLoads.entries.first().key) }
             }
 
         }
     }
 
     fun updateRecommendedDate(recommendedDate: LocalDate) {
-        _buildScheduleScreenUiState.update{it.copy(
-            recommendedDate = recommendedDate,
-            temporaryTasks = mutableMapOf<TaskUiStateElement, Boolean>()
-        )}
+        _buildScheduleScreenUiState.update {
+            it.copy(
+                recommendedDate = recommendedDate,
+                temporaryTasks = mutableListOf<TaskUiStateElement>()
+            )
+        }
     }
 
     fun isTextFieldEnabled(): Boolean {
@@ -131,8 +144,11 @@ class BuildScheduleScreenViewModel(
     }
 
     fun getNextRecommendedDate() {
-        val nextDate = getNextKeyBySortedValue(dateWorkLoads, _buildScheduleScreenUiState.value.recommendedDate)
-        if(nextDate == _buildScheduleScreenUiState.value.recommendedDate) {
+        val nextDate = getNextKeyBySortedValue(
+            dateWorkLoads,
+            _buildScheduleScreenUiState.value.recommendedDate
+        )
+        if (nextDate == _buildScheduleScreenUiState.value.recommendedDate) {
             _dateOutOfRangeErrorMessage.value = "You've reached the date range boundary!"
         } else {
             updateRecommendedDate(nextDate)
@@ -141,8 +157,11 @@ class BuildScheduleScreenViewModel(
     }
 
     fun getPreviousRecommendedDate() {
-        val previousDate = getPreviousKeyBySortedValue(dateWorkLoads, _buildScheduleScreenUiState.value.recommendedDate)
-        if(previousDate == _buildScheduleScreenUiState.value.recommendedDate) {
+        val previousDate = getPreviousKeyBySortedValue(
+            dateWorkLoads,
+            _buildScheduleScreenUiState.value.recommendedDate
+        )
+        if (previousDate == _buildScheduleScreenUiState.value.recommendedDate) {
             _dateOutOfRangeErrorMessage.value = "You've reached the date range boundary!"
         } else {
             updateRecommendedDate(previousDate)
@@ -151,36 +170,72 @@ class BuildScheduleScreenViewModel(
     }
 
     fun updateStartActivityPeriodTime(startActivityTime: LocalTime) {
-        if(startActivityTime.isAfter(_buildScheduleScreenUiState.value.activityPeriodFinish)){
+        if (startActivityTime.isAfter(_buildScheduleScreenUiState.value.activityPeriodFinish)) {
             _startActivityPeriodErrorMessage.value = "Start Time must be before Finish Time!"
         } else {
-            _buildScheduleScreenUiState.update{it.copy(activityPeriodStart = startActivityTime)}
+            _buildScheduleScreenUiState.update { it.copy(activityPeriodStart = startActivityTime) }
             _startActivityPeriodErrorMessage.value = ""
             _buildScheduleScreenUiState.value = _buildScheduleScreenUiState.value.copy(
-                temporaryTasks = mutableMapOf<TaskUiStateElement, Boolean>()
+                temporaryTasks = mutableListOf<TaskUiStateElement>()
             )
         }
+    }
 
+    fun updateStartDesirablePeriodTime(startDesirableTime: LocalTime) {
+        if (startDesirableTime.isAfter(_buildScheduleScreenUiState.value.desirableExecutionPeriodFinish)) {
+            _startDesirablePeriodErrorMessage.value =
+                "Start Desirable Time must be before Finish Desirable Time!"
+        } else if (!isDesirableIntervalWithinActivityInterval()) {
+            _startDesirablePeriodErrorMessage.value =
+                "Start Desirable Time must be within activity period!"
+        } else {
+            _buildScheduleScreenUiState.update { it.copy(desirableExecutionPeriodStart = startDesirableTime) }
+            _startDesirablePeriodErrorMessage.value = ""
+        }
+
+    }
+
+    fun isDesirableIntervalWithinActivityInterval(): Boolean {
+        val currentState = _buildScheduleScreenUiState.value
+        return !currentState.desirableExecutionPeriodStart.isBefore(currentState.activityPeriodStart) && !currentState.desirableExecutionPeriodFinish.isAfter(
+            currentState.activityPeriodFinish
+        )
     }
 
     fun updateFinishActivityPeriodTime(finishActivityTime: LocalTime) {
-        if(finishActivityTime.isBefore(_buildScheduleScreenUiState.value.activityPeriodStart)){
+        if (finishActivityTime.isBefore(_buildScheduleScreenUiState.value.activityPeriodStart)) {
             _finishActivityPeriodErrorMessage.value = "Finish Time must be after Start Time!"
         } else {
-            _buildScheduleScreenUiState.update{it.copy(activityPeriodFinish = finishActivityTime)}
+            _buildScheduleScreenUiState.update { it.copy(activityPeriodFinish = finishActivityTime) }
             _finishActivityPeriodErrorMessage.value = ""
             _buildScheduleScreenUiState.value = _buildScheduleScreenUiState.value.copy(
-                temporaryTasks = mutableMapOf<TaskUiStateElement, Boolean>()
+                temporaryTasks = mutableListOf<TaskUiStateElement>()
             )
         }
     }
 
-    fun makeTaskFixed(task: TaskUiStateElement) {
-        val currentState = _buildScheduleScreenUiState.value
-        val updatedMap = currentState.temporaryTasks.apply {
-            this[task] = !this[task]!!
+    fun updateFinishDesirablePeriodTime(finishDesirableTime: LocalTime) {
+        if (finishDesirableTime.isBefore(_buildScheduleScreenUiState.value.desirableExecutionPeriodStart)) {
+            _finishDesirablePeriodErrorMessage.value =
+                "Finish Desirable Time must be after Start Desirable Time!"
+        } else if (!isDesirableIntervalWithinActivityInterval()) {
+            _finishDesirablePeriodErrorMessage.value =
+                "Finish Desirable Period must be within activity period!"
+        } else {
+            _buildScheduleScreenUiState.update { it.copy(desirableExecutionPeriodFinish = finishDesirableTime) }
+            _finishDesirablePeriodErrorMessage.value = ""
         }
-        _buildScheduleScreenUiState.value = currentState.copy(temporaryTasks = updatedMap)
+    }
+
+    fun changeFixedStatus(task: TaskUiStateElement) {
+        val currentState = _buildScheduleScreenUiState.value
+        val taskIndex = currentState.temporaryTasks.indexOfFirst { it.id == task.id }
+        val updatedTask =
+            if (task.isFixed) currentState.temporaryTasks[taskIndex].copy(isFixed = false)
+            else currentState.temporaryTasks[taskIndex].copy(isFixed = true)
+        val updatedTasks = currentState.temporaryTasks.toMutableList()
+        updatedTasks[taskIndex] = updatedTask
+        _buildScheduleScreenUiState.value = currentState.copy(temporaryTasks = updatedTasks)
     }
 
     fun getTasksByDateInActivityPeriod() {
@@ -193,16 +248,58 @@ class BuildScheduleScreenViewModel(
                     .filter { task ->
                         val taskStartAt = task.startAt
                         val taskFinishAt = task.finishAt
-                        parseDateTimeStringToTime(taskStartAt) < activityPeriodFinish
-                                && parseDateTimeStringToTime(taskFinishAt) > activityPeriodStart
+                        parseDateTimeStringToTime(taskStartAt) < activityPeriodFinish && parseDateTimeStringToTime(
+                            taskFinishAt
+                        ) > activityPeriodStart
                     }
 
-            val temporaryTasksMap: MutableMap<TaskUiStateElement, Boolean> = tasks
-                .map {it.toTaskUiStateElement()}
-                .associateWith { false }.toMutableMap()
+            val temporaryTasksList: MutableList<TaskUiStateElement> = tasks.map {
+                it.toTaskUiStateElement()
+            }.toMutableList()
 
-            _buildScheduleScreenUiState.value = currentState.copy(temporaryTasks = temporaryTasksMap)
+            _buildScheduleScreenUiState.value =
+                currentState.copy(temporaryTasks = temporaryTasksList)
 
         }
+    }
+
+    private fun onChangeNewTaskDuration(minutes: Int) {
+        _buildScheduleScreenUiState.update { it.copy(newTaskDurationInMinutes = minutes) }
+    }
+
+    fun validateDurationMinutes(minutes: Int): Boolean {
+        val desirablePeriodDuration = Duration.between(
+            _buildScheduleScreenUiState.value.desirableExecutionPeriodStart,
+            _buildScheduleScreenUiState.value.desirableExecutionPeriodFinish
+        ).toMinutes().toInt()
+        val activityPeriodDuration = Duration.between(
+            _buildScheduleScreenUiState.value.activityPeriodStart,
+            _buildScheduleScreenUiState.value.activityPeriodFinish
+        ).toMinutes().toInt()
+        if (minutes >= desirablePeriodDuration && _buildScheduleScreenUiState.value.considerDesirableExecutionPeriod) {
+            _noFreeTimeForNewTaskErrorMessage.value = "Duration of the task is bigger than desirable period!"
+            return false
+        } else if(minutes >= activityPeriodDuration){
+            _noFreeTimeForNewTaskErrorMessage.value = "Duration of the task is bigger than activity period!"
+            return false
+        } else {
+            onChangeNewTaskDuration(minutes)
+            _noFreeTimeForNewTaskErrorMessage.value = ""
+            return true
+        }
+    }
+
+    fun isBuildScheduleButtonAvailable(): Boolean {
+        return isTextFieldEnabled() &&
+                _buildScheduleScreenUiState.value.temporaryTasks != BuildScheduleScreenUiState().temporaryTasks &&
+                validateDurationMinutes(_buildScheduleScreenUiState.value.newTaskDurationInMinutes) &&
+                isDesirableIntervalWithinActivityInterval()
+    }
+
+    fun changeDesiredPeriodUsageStatus() {
+        _buildScheduleScreenUiState.update {
+            it.copy(
+                considerDesirableExecutionPeriod = !_buildScheduleScreenUiState.value.considerDesirableExecutionPeriod
+            ) }
     }
 }
