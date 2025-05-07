@@ -305,6 +305,7 @@ fun BuildScheduleScreen(
                 Button(
                     enabled = viewModel.isBuildScheduleButtonAvailable(),
                     onClick = {
+                        viewModel.buildSchedule()
                         onBuildNewSchedule()
                     }) {
                     Text("Build new schedule")

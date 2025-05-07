@@ -311,9 +311,14 @@ class SharedScheduleScreensViewModel(
         NewScheduleScreenUiState.Loading
     )
     val newScheduleScreenUiState: StateFlow<NewScheduleScreenUiState> = _newScheduleScreenUiState
+
+    fun buildSchedule() {
+
+    }
 }
 
 sealed class NewScheduleScreenUiState {
     object Loading : NewScheduleScreenUiState()
     data class Success(val tasks: List<TaskUiStateElement>) : NewScheduleScreenUiState()
+    data class Failure(val message: String) : NewScheduleScreenUiState()
 }
