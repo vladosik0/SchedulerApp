@@ -44,28 +44,34 @@ class TaskEditScreenViewModel (
                     tasksRepository.getTaskStream(taskId)
                         .map { it?.toEditTaskScreenUiState() ?: TaskEditScreenUiState() }
                         .collect {
+                            delay(1000)
                             _taskEditScreenUiState.value = it.copy(isLoading = false)
-                            delay(200)
                         }
                 }
             }
 
             date != null -> {
-                _taskEditScreenUiState.value = TaskEditScreenUiState(
-                    date = parseDateStringToDate(date),
-                    isLoading = false
-                )
+                viewModelScope.launch {
+                    delay(1000)
+                    _taskEditScreenUiState.value = TaskEditScreenUiState(
+                        date = parseDateStringToDate(date), isLoading = false
+                    )
+                }
             }
 
             slot != null -> {
-                val startTime = if (LocalDateTime.parse(slot).isBefore(LocalDateTime.now()))
-                    LocalTime.now() else parseDateTimeStringToTime(slot)
-                _taskEditScreenUiState.value = TaskEditScreenUiState(
-                    date = parseDateTimeStringToDate(slot),
-                    startTime = startTime,
-                    finishTime = startTime.plusMinutes(90),
-                    isLoading = false
-                )
+                viewModelScope.launch {
+                    delay(1000)
+                    val startTime = if (LocalDateTime.parse(slot)
+                            .isBefore(LocalDateTime.now())
+                    ) LocalTime.now() else parseDateTimeStringToTime(slot)
+                    _taskEditScreenUiState.value = TaskEditScreenUiState(
+                        date = parseDateTimeStringToDate(slot),
+                        startTime = startTime,
+                        finishTime = startTime.plusMinutes(90),
+                        isLoading = false
+                    )
+                }
             }
         }
     }
@@ -184,8 +190,6 @@ class TaskEditScreenViewModel (
             } else {
                 tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
             }
-            _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(isLoading = true)
-            delay(500)
         }
     }
     //updateIsNotified

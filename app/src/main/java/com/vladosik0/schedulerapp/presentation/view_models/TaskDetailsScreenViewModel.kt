@@ -26,8 +26,10 @@ class TaskDetailsScreenViewModel(
             viewModelScope.launch(Dispatchers.IO) {
                 tasksRepository.getTaskStream(taskId)
                     .map { TaskDetailsUiState.Success(it?.toTaskUiStateElement() ?: TaskUiStateElement()) }
-                    .collect { _taskDetailsUiState.value = it }
-                delay(500)
+                    .collect {
+                        delay(1000)
+                        _taskDetailsUiState.value = it
+                    }
             }
         }
     }
@@ -39,7 +41,6 @@ class TaskDetailsScreenViewModel(
         if (currentState is TaskDetailsUiState.Success) {
             viewModelScope.launch {
                 tasksRepository.deleteTask(currentState.task.toTask())
-                _taskDetailsUiState.value = TaskDetailsUiState.Loading
                 delay(500)
                 onDeleted()
             }
