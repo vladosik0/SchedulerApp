@@ -113,6 +113,9 @@ fun getEventStatus(startAt: LocalDateTime, finishAt: LocalDateTime, now: LocalDa
 
 // --- Get event status based on time
 fun getEventStatus(startAt: String, finishAt: String): String {
+    if(startAt == "" || finishAt == "") {
+        return ""
+    }
     val now = LocalDateTime.now()
     val startTime = LocalDateTime.parse(startAt)
     val finishTime = LocalDateTime.parse(finishAt)

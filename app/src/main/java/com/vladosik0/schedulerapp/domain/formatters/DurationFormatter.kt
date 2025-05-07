@@ -4,6 +4,9 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import java.time.Duration
 
 fun formatDuration(startTimeString: String, finishTimeString: String): String {
+    if(startTimeString == "" || finishTimeString == "") {
+        return ""
+    }
     val minutes = getDuration(startTimeString, finishTimeString)
     val hours = minutes / 60
     val remainingMinutes = minutes % 60
