@@ -1,6 +1,5 @@
 package com.vladosik0.schedulerapp.presentation.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +37,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -268,8 +268,26 @@ fun BuildScheduleScreen(
             TimePickerField(
                 label = "Desired Task Period Finish",
                 selectedTime = buildScheduleScreenUiState.desirableExecutionPeriodFinish,
-                errorMessage = finishDesirablePeriodErrorMessage,
+                errorMessage = finishDesirablePeriodErrorMessage
             ) { viewModel.updateFinishDesirablePeriodTime(it) }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Consider this period for new schedule",
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                Switch(
+                    checked = buildScheduleScreenUiState.considerDesirableExecutionPeriod,
+                    onCheckedChange = { viewModel.changeDesiredPeriodUsageStatus() }
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -438,7 +456,6 @@ fun TaskTable(
                             onCheckedChange = { onToggle(task) },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Log.d("UI_DEBUG", "${task.isFixed}")
                             Icon(
                                 imageVector = if (task.isFixed) Icons.Filled.Lock else Icons.Outlined.Lock,
                                 contentDescription = null
@@ -470,7 +487,6 @@ fun InputField(
             if (parsed != null) {
                 isError = false
                 onValueChange(parsed)
-                Log.d("UI_DEBUG", "$parsed")
             } else {
                 isError = true
             }
