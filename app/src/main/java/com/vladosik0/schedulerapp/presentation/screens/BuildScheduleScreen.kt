@@ -1,7 +1,9 @@
 package com.vladosik0.schedulerapp.presentation.screens
 
-import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,12 +19,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -31,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,12 +53,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladosik0.schedulerapp.R
+import com.vladosik0.schedulerapp.domain.enums.Difficulty
+import com.vladosik0.schedulerapp.domain.enums.Priority
+import com.vladosik0.schedulerapp.domain.formatters.getFormattedTime
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.view_models.BuildScheduleScreenViewModel
+import com.vladosik0.schedulerapp.ui.theme.SchedulerAppTheme
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -66,15 +81,11 @@ fun BuildScheduleScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val buildScheduleScreenUiState by viewModel.buildScheduleScreenUiState.collectAsState()
 
-    Log.d("UI_DEBUG_SCREEN", "${buildScheduleScreenUiState.startDate}")
-
     val startDateErrorMessage by viewModel.startDateErrorMessage.collectAsState()
     val finishDateErrorMessage by viewModel.finishDateErrorMessage.collectAsState()
     val dateOutOfRangeErrorMessage by viewModel.dateOutOfRangeErrorMessage.collectAsState()
     val startActivityPeriodErrorMessage by viewModel.startActivityPeriodErrorMessage.collectAsState()
     val finishActivityPeriodErrorMessage by viewModel.finishActivityPeriodErrorMessage.collectAsState()
-
-
 
     Scaffold(
         topBar = {
@@ -218,6 +229,27 @@ fun BuildScheduleScreen(
                 errorMessage = finishActivityPeriodErrorMessage,
             ) { viewModel.updateFinishActivityPeriodTime(it) }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Button(
+                    onClick = { viewModel.getTasksByDateInActivityPeriod() },
+                    enabled = viewModel.isTextFieldEnabled() &&
+                            finishActivityPeriodErrorMessage == "" &&
+                            startActivityPeriodErrorMessage == ""
+                ) {
+                    Text(text = "Get Tasks")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(text = "Tasks", style = MaterialTheme.typography.titleSmall)
+
+            TaskTable(buildScheduleScreenUiState.temporaryTasks.keys.toList()) {
+                viewModel.makeTaskFixed(it)
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             TimePickerField(
@@ -234,7 +266,7 @@ fun BuildScheduleScreen(
                 errorMessage = finishActivityPeriodErrorMessage,
             ) { viewModel.updateFinishActivityPeriodTime(it) }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -307,6 +339,161 @@ fun DatePickerWithIconField(
                 }
             },
             modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun TaskTable(
+    tasks: List<TaskUiStateElement>,
+    onToggle: (TaskUiStateElement) -> Unit
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(8.dp)
+        ) {
+            Text("Title", Modifier.weight(2f))
+            Text("Time", Modifier.weight(2f))
+            Image(
+                painter = painterResource(R.drawable.priority),
+                contentDescription = "Priority",
+                modifier = Modifier.size(24.dp).weight(1f)
+            )
+            Image(
+                painter = painterResource(R.drawable.difficulty),
+                contentDescription = "Difficulty",
+                modifier = Modifier.size(24.dp).weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Outlined.Lock,
+                contentDescription = "Fixed",
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        HorizontalDivider(thickness = 2.dp)
+
+        Column {
+            tasks.forEach { task ->
+                key(task.id) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(task.title, Modifier.weight(2f))
+                        Text(
+                            "${getFormattedTime(task.startAt)}-${getFormattedTime(task.finishAt)}",
+                            Modifier.weight(2f)
+                        )
+                        Icon(
+                            imageVector = if(task.priority == Priority.LOW) Icons.Default.KeyboardArrowDown
+                            else Icons.Default.KeyboardArrowUp,
+                            contentDescription = "Priority",
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            imageVector = if(task.difficulty == Difficulty.NORMAL) Icons.Default.KeyboardArrowDown
+                            else Icons.Default.KeyboardArrowUp,
+                            contentDescription = "Difficulty",
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconToggleButton(
+                            checked = task.isFixed,
+                            onCheckedChange = { onToggle(task) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = if (task.isFixed) Icons.Filled.Lock else Icons.Outlined.Lock,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                    VerticalDivider(thickness = 4.dp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun TaskTablePreview() {
+    SchedulerAppTheme {
+        val taskList = listOf(
+            TaskUiStateElement(
+                id = 1,
+                startAt = "2025-05-10T08:00:00",
+                finishAt = "2025-05-10T10:00:00",
+                title = "Task 1",
+                description = "This is task 1",
+                category = "Work",
+                difficulty = Difficulty.NORMAL,
+                priority = Priority.LOW,
+                isNotified = false,
+                isDone = false,
+                isFixed = true
+            ),
+            TaskUiStateElement(
+                id = 2,
+                startAt = "2025-05-10T09:30:00",
+                finishAt = "2025-05-10T11:30:00",
+                title = "Task 2",
+                description = "This is task 2",
+                category = "Personal",
+                difficulty = Difficulty.HIGH,
+                priority = Priority.HIGH,
+                isNotified = true,
+                isDone = false,
+                isFixed = false
+            ),
+            TaskUiStateElement(
+                id = 3,
+                startAt = "2025-05-10T12:00:00",
+                finishAt = "2025-05-10T14:00:00",
+                title = "Task 3",
+                description = "This is task 3",
+                category = "Study",
+                difficulty = Difficulty.NORMAL,
+                priority = Priority.LOW,
+                isNotified = false,
+                isDone = true,
+                isFixed = false
+            ),
+            TaskUiStateElement(
+                id = 4,
+                startAt = "2025-05-10T15:00:00",
+                finishAt = "2025-05-10T17:00:00",
+                title = "Task 4",
+                description = "This is task 4",
+                category = "Work",
+                difficulty = Difficulty.NORMAL,
+                priority = Priority.LOW,
+                isNotified = true,
+                isDone = false,
+                isFixed = false
+            ),
+            TaskUiStateElement(
+                id = 5,
+                startAt = "2025-05-10T18:00:00",
+                finishAt = "2025-05-10T20:00:00",
+                title = "Task 5",
+                description = "This is task 5",
+                category = "Personal",
+                difficulty = Difficulty.HIGH,
+                priority = Priority.LOW,
+                isNotified = false,
+                isDone = false,
+                isFixed = true
+            )
+        )
+        TaskTable(
+            tasks = taskList,
+            onToggle = {}
         )
     }
 }

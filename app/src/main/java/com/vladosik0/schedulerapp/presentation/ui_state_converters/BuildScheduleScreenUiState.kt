@@ -7,7 +7,7 @@ data class BuildScheduleScreenUiState (
     val startDate: LocalDate = LocalDate.now(),
     val finishDate: LocalDate = LocalDate.now().plusDays(4),
     val recommendedDate: LocalDate = LocalDate.now(),
-    val temporaryTasks: List<TaskUiStateElement> = emptyList<TaskUiStateElement>(),
+    val temporaryTasks: MutableMap<TaskUiStateElement, Boolean> = mutableMapOf<TaskUiStateElement, Boolean>(),
     val activityPeriodStart: LocalTime = LocalTime.now(),
     val activityPeriodFinish: LocalTime = LocalTime.now().plusHours(8),
     val desirableExecutionPeriodStart: LocalTime = LocalTime.now(),

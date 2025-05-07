@@ -6,10 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
+import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getDateWorkloads
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getNextKeyBySortedValue
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getPreviousKeyBySortedValue
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTaskUiStateElement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -117,7 +120,10 @@ class BuildScheduleScreenViewModel(
     }
 
     fun updateRecommendedDate(recommendedDate: LocalDate) {
-        _buildScheduleScreenUiState.update{it.copy(recommendedDate = recommendedDate)}
+        _buildScheduleScreenUiState.update{it.copy(
+            recommendedDate = recommendedDate,
+            temporaryTasks = mutableMapOf<TaskUiStateElement, Boolean>()
+        )}
     }
 
     fun isTextFieldEnabled(): Boolean {
@@ -129,14 +135,19 @@ class BuildScheduleScreenViewModel(
         if(nextDate == _buildScheduleScreenUiState.value.recommendedDate) {
             _dateOutOfRangeErrorMessage.value = "You've reached the date range boundary!"
         } else {
-            _buildScheduleScreenUiState.update { it.copy(recommendedDate = nextDate) }
+            updateRecommendedDate(nextDate)
             _dateOutOfRangeErrorMessage.value = ""
         }
     }
 
     fun getPreviousRecommendedDate() {
         val previousDate = getPreviousKeyBySortedValue(dateWorkLoads, _buildScheduleScreenUiState.value.recommendedDate)
-        _buildScheduleScreenUiState.update { it.copy(recommendedDate = previousDate) }
+        if(previousDate == _buildScheduleScreenUiState.value.recommendedDate) {
+            _dateOutOfRangeErrorMessage.value = "You've reached the date range boundary!"
+        } else {
+            updateRecommendedDate(previousDate)
+            _dateOutOfRangeErrorMessage.value = ""
+        }
     }
 
     fun updateStartActivityPeriodTime(startActivityTime: LocalTime) {
@@ -145,7 +156,11 @@ class BuildScheduleScreenViewModel(
         } else {
             _buildScheduleScreenUiState.update{it.copy(activityPeriodStart = startActivityTime)}
             _startActivityPeriodErrorMessage.value = ""
+            _buildScheduleScreenUiState.value = _buildScheduleScreenUiState.value.copy(
+                temporaryTasks = mutableMapOf<TaskUiStateElement, Boolean>()
+            )
         }
+
     }
 
     fun updateFinishActivityPeriodTime(finishActivityTime: LocalTime) {
@@ -154,6 +169,40 @@ class BuildScheduleScreenViewModel(
         } else {
             _buildScheduleScreenUiState.update{it.copy(activityPeriodFinish = finishActivityTime)}
             _finishActivityPeriodErrorMessage.value = ""
+            _buildScheduleScreenUiState.value = _buildScheduleScreenUiState.value.copy(
+                temporaryTasks = mutableMapOf<TaskUiStateElement, Boolean>()
+            )
+        }
+    }
+
+    fun makeTaskFixed(task: TaskUiStateElement) {
+        val currentState = _buildScheduleScreenUiState.value
+        val updatedMap = currentState.temporaryTasks.apply {
+            this[task] = !this[task]!!
+        }
+        _buildScheduleScreenUiState.value = currentState.copy(temporaryTasks = updatedMap)
+    }
+
+    fun getTasksByDateInActivityPeriod() {
+        val currentState = _buildScheduleScreenUiState.value
+        val activityPeriodStart = _buildScheduleScreenUiState.value.activityPeriodStart
+        val activityPeriodFinish = _buildScheduleScreenUiState.value.activityPeriodFinish
+        viewModelScope.launch(Dispatchers.IO) {
+            val tasks =
+                tasksRepository.getTasksByDate(currentState.recommendedDate.toString()).first()
+                    .filter { task ->
+                        val taskStartAt = task.startAt
+                        val taskFinishAt = task.finishAt
+                        parseDateTimeStringToTime(taskStartAt) < activityPeriodFinish
+                                && parseDateTimeStringToTime(taskFinishAt) > activityPeriodStart
+                    }
+
+            val temporaryTasksMap: MutableMap<TaskUiStateElement, Boolean> = tasks
+                .map {it.toTaskUiStateElement()}
+                .associateWith { false }.toMutableMap()
+
+            _buildScheduleScreenUiState.value = currentState.copy(temporaryTasks = temporaryTasksMap)
+
         }
     }
 }

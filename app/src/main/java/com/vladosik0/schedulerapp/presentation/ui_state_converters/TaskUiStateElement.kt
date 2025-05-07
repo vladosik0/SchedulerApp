@@ -14,7 +14,8 @@ data class TaskUiStateElement (
     val difficulty: Difficulty = Difficulty.NORMAL,
     val priority: Priority = Priority.LOW,
     val isNotified: Boolean = false,
-    val isDone: Boolean = false
+    val isDone: Boolean = false,
+    val isFixed: Boolean = false
 )
 
 fun TaskUiStateElement.toTask(): Task = Task(
