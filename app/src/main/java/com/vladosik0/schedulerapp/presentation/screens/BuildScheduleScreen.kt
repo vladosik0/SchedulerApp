@@ -229,7 +229,10 @@ fun BuildScheduleScreen(
                 label = "Activity Period Start",
                 selectedTime = buildScheduleScreenUiState.activityPeriodStart,
                 errorMessage = startActivityPeriodErrorMessage,
-            ) { viewModel.updateStartActivityPeriodTime(it) }
+            ) {
+                viewModel.updateStartActivityPeriodTime(it)
+                viewModel.updateStartDesirablePeriodTime(it)
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -237,7 +240,10 @@ fun BuildScheduleScreen(
                 label = "Activity Period Finish",
                 selectedTime = buildScheduleScreenUiState.activityPeriodFinish,
                 errorMessage = finishActivityPeriodErrorMessage,
-            ) { viewModel.updateFinishActivityPeriodTime(it) }
+            ) {
+                viewModel.updateFinishActivityPeriodTime(it)
+                viewModel.updateFinishDesirablePeriodTime(it)
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
