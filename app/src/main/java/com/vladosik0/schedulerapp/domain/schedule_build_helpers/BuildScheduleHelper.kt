@@ -1,7 +1,6 @@
 package com.vladosik0.schedulerapp.domain.schedule_build_helpers
 
 import com.vladosik0.schedulerapp.data.local.Task
-import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.getDuration
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
