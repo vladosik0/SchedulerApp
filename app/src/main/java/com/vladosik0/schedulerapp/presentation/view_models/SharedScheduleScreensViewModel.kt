@@ -259,7 +259,6 @@ class SharedScheduleScreensViewModel(
     }
 
     fun getTasksByDateInActivityPeriod() {
-        _buildScheduleScreenUiState.update { it.copy(areTasksLoading = true) }
         val currentState = _buildScheduleScreenUiState.value
         viewModelScope.launch(Dispatchers.IO) {
             val tasks = tasksRepository.getTasksByDate(currentState.recommendedDate.toString()).first()
@@ -287,8 +286,7 @@ class SharedScheduleScreensViewModel(
                 activityPeriodStart = updatedActivityPeriodStart,
                 activityPeriodFinish = updatedActivityPeriodFinish,
                 desirableExecutionPeriodStart = updatedActivityPeriodStart,
-                desirableExecutionPeriodFinish = updatedActivityPeriodFinish,
-                areTasksLoading = false
+                desirableExecutionPeriodFinish = updatedActivityPeriodFinish
             )
         }
     }

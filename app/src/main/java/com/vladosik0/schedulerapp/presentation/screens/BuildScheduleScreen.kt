@@ -243,11 +243,6 @@ fun BuildScheduleScreen(
 
 
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-
-                if(buildScheduleScreenUiState.areTasksLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
                 Button(
                     onClick = { viewModel.getTasksByDateInActivityPeriod() },
                     enabled = viewModel.isTextFieldEnabled() &&
