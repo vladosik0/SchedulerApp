@@ -1,10 +1,17 @@
 package com.vladosik0.schedulerapp.presentation.ui_state_converters
 
+import com.vladosik0.schedulerapp.domain.enums.Difficulty
+import com.vladosik0.schedulerapp.domain.enums.Priority
 import java.time.LocalDate
 import java.time.LocalTime
 
 data class BuildScheduleScreenUiState (
     val newTaskId: Int = 0,
+    val newTaskTitle: String = "",
+    val newTaskCategory: String = "",
+    val newTaskDescription: String = "",
+    val newTaskPriority: Priority = Priority.LOW,
+    val newTaskDifficulty: Difficulty = Difficulty.NORMAL,
     val startDate: LocalDate = LocalDate.now(),
     val finishDate: LocalDate = LocalDate.now().plusDays(4),
     val recommendedDate: LocalDate = LocalDate.now(),

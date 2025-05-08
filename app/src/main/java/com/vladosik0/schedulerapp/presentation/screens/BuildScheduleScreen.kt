@@ -122,23 +122,23 @@ fun BuildScheduleScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Task Title: " + viewModel.getTitle(),
+                text = "Task Title: " + buildScheduleScreenUiState.newTaskTitle,
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Task Description: " + viewModel.getDescription(),
+                text = "Task Description: " + buildScheduleScreenUiState.newTaskDescription,
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Task Category: " + viewModel.getCategory(),
+                text = "Task Category: " + buildScheduleScreenUiState.newTaskCategory,
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Task Priority: " + viewModel.getPriority().name.toPrettyFormat(),
+                text = "Task Priority: " + buildScheduleScreenUiState.newTaskPriority.name.toPrettyFormat(),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Task Difficulty: " + viewModel.getDifficulty().name.toPrettyFormat(),
+                text = "Task Difficulty: " + buildScheduleScreenUiState.newTaskDifficulty.name.toPrettyFormat(),
                 style = MaterialTheme.typography.bodyMedium
             )
 

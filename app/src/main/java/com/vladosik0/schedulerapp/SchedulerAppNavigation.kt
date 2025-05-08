@@ -130,7 +130,21 @@ fun SchedulerAppNavigation() {
                 navArgument("difficulty") { type = NavType.IntType },
                 navArgument("priority") { type = NavType.IntType },
                 )
-        ) {
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getInt("taskId") ?: 0
+            val title = backStackEntry.arguments?.getString("title") ?: ""
+            val description = backStackEntry.arguments?.getString("description") ?: ""
+            val category = backStackEntry.arguments?.getString("category") ?: ""
+            val difficulty = backStackEntry.arguments?.getInt("difficulty") ?: 0
+            val priority = backStackEntry.arguments?.getInt("priority") ?: 0
+            sharedScheduleScreensViewModel.updateInitialBuildScheduleScreenUiState(
+                id = taskId,
+                title = title,
+                description = description,
+                category = category,
+                difficulty = if(difficulty == 1) Difficulty.NORMAL else Difficulty.HIGH,
+                priority = if(priority == 1) Priority.LOW else Priority.HIGH
+            )
             BuildScheduleScreen(
                 viewModel = sharedScheduleScreensViewModel,
                 onCancel = { navController.popBackStack() },

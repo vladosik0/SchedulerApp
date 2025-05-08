@@ -32,8 +32,7 @@ object AppViewModelProvider {
         }
         initializer {
             SharedScheduleScreensViewModel(
-                tasksRepository = schedulerApplication().container.tasksRepository,
-                savedStateHandle = this.createSavedStateHandle()
+                tasksRepository = schedulerApplication().container.tasksRepository
             )
         }
     }

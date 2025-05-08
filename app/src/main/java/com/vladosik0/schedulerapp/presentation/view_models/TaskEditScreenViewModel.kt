@@ -144,28 +144,32 @@ class TaskEditScreenViewModel (
     }
 
     private fun checkTaskValidation() {
+
+        var isValid = _areTextFieldsValid.value
+
+        val startTime = _taskEditScreenUiState.value.startTime
+        val finishTime = _taskEditScreenUiState.value.finishTime
+        if (startTime.isAfter(finishTime) || startTime == finishTime) {
+            isValid = false
+            _startTimeErrorMessage.value = "Start Time must be before Finish Time"
+        } else {
+            _startTimeErrorMessage.value = ""
+        }
+        if (finishTime.isBefore(startTime) || finishTime == startTime) {
+            isValid = false
+            _finishTimeErrorMessage.value = "Finish Time must be after Start Time"
+        } else {
+            _finishTimeErrorMessage.value = ""
+        }
+
+        val newTaskStartAt =
+            _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.startTime)
+        val newTaskFinishAt =
+            _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.finishTime)
+
         viewModelScope.launch(Dispatchers.IO) {
-
-            var isValid = _areTextFieldsValid.value
-
-            val startTime = _taskEditScreenUiState.value.startTime
-            val finishTime = _taskEditScreenUiState.value.finishTime
-            if(startTime.isAfter(finishTime) || startTime == finishTime) {
-                isValid = false
-                _startTimeErrorMessage.value = "Start Time must be before Finish Time"
-            } else {
-                _startTimeErrorMessage.value = ""
-            }
-            if(finishTime.isBefore(startTime) || finishTime == startTime) {
-                isValid = false
-                _finishTimeErrorMessage.value = "Finish Time must be after Start Time"
-            } else {
-                _finishTimeErrorMessage.value = ""
-            }
-
-            val newTaskStartAt = _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.startTime)
-            val newTaskFinishAt = _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.finishTime)
-            val tasks = tasksRepository.getTasksByDate(_taskEditScreenUiState.value.date.toString()).first()
+            val tasks =
+                tasksRepository.getTasksByDate(_taskEditScreenUiState.value.date.toString()).first()
 
             val hasOverlap = tasks.any { task ->
                 val taskStartAt = LocalDateTime.parse(task.startAt)
@@ -173,7 +177,7 @@ class TaskEditScreenViewModel (
                 newTaskStartAt < taskFinishAt && newTaskFinishAt >= taskStartAt && task.id != taskId
             }
 
-            if(hasOverlap) {
+            if (hasOverlap) {
                 _saveTaskErrorMessage.value = "There are already tasks in this time interval!"
                 isValid = false
             } else {

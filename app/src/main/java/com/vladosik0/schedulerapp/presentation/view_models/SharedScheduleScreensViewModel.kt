@@ -1,6 +1,5 @@
 package com.vladosik0.schedulerapp.presentation.view_models
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
@@ -10,6 +9,7 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getDateWorkloads
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getNextKeyBySortedValue
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getPreviousKeyBySortedValue
+import com.vladosik0.schedulerapp.domain.schedule_build_helpers.sortTasksAlgorithm
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTaskUiStateElement
@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -28,39 +29,13 @@ import java.time.temporal.ChronoUnit
 import java.time.Duration
 
 class SharedScheduleScreensViewModel(
-    private val tasksRepository: TasksRepository,
-    savedStateHandle: SavedStateHandle
+    private val tasksRepository: TasksRepository
 ) : ViewModel() {
-
-    private val taskId: Int? = savedStateHandle["taskId"]
-
-    private val title: String? = savedStateHandle["title"]
-
-    private val description: String? = savedStateHandle["description"]
-
-    private val category: String? = savedStateHandle["category"]
-
-    private val priority: Int? = savedStateHandle["priority"]
-
-    private val difficulty: Int? = savedStateHandle["difficulty"]
-
-    fun getTitle(): String = title.toString()
-
-    fun getDescription(): String = description.toString()
-
-    fun getCategory(): String = category.toString()
-
-    fun getPriority(): Priority = if (priority == 1) Priority.LOW else Priority.HIGH
-
-    fun getDifficulty(): Difficulty = if (difficulty == 1) Difficulty.NORMAL else Difficulty.HIGH
 
     private val _buildScheduleScreenUiState = MutableStateFlow(BuildScheduleScreenUiState())
     val buildScheduleScreenUiState: StateFlow<BuildScheduleScreenUiState> =
         _buildScheduleScreenUiState
 
-    init {
-        _buildScheduleScreenUiState.update { it.copy(newTaskId = taskId ?: 0) }
-    }
 
     private val _startDateErrorMessage = MutableStateFlow("")
     val startDateErrorMessage: StateFlow<String> = _startDateErrorMessage
@@ -88,6 +63,23 @@ class SharedScheduleScreensViewModel(
 
     private val dateWorkLoads = mutableMapOf<LocalDate, Int>()
 
+    fun updateInitialBuildScheduleScreenUiState(
+        id: Int,
+        title: String,
+        description: String,
+        category: String,
+        priority: Priority,
+        difficulty: Difficulty,
+    ) {
+        _buildScheduleScreenUiState.update { it.copy(
+            newTaskId = id,
+            newTaskTitle = title,
+            newTaskDescription = if(description == "") "No description" else description,
+            newTaskCategory = category,
+            newTaskPriority = priority,
+            newTaskDifficulty = difficulty
+        ) }
+    }
     fun updateStartDate(startDate: LocalDate) {
         if (startDate.isAfter(_buildScheduleScreenUiState.value.finishDate)) {
             _startDateErrorMessage.value = "Start Date must be before Finish Date!"
@@ -125,7 +117,8 @@ class SharedScheduleScreensViewModel(
                 dateWorkLoads[dateWorkLoad.key] = dateWorkLoad.value
             }
 
-            if (getPriority() == Priority.HIGH && getDifficulty() == Difficulty.NORMAL) {
+            if (_buildScheduleScreenUiState.value.newTaskPriority == Priority.HIGH &&
+                    _buildScheduleScreenUiState.value.newTaskDifficulty == Difficulty.NORMAL) {
                 _buildScheduleScreenUiState.update { it.copy(recommendedDate = startDate) }
             } else {
                 _buildScheduleScreenUiState.update { it.copy(recommendedDate = dateWorkLoads.entries.first().key) }
@@ -313,8 +306,22 @@ class SharedScheduleScreensViewModel(
     val newScheduleScreenUiState: StateFlow<NewScheduleScreenUiState> = _newScheduleScreenUiState
 
     fun buildSchedule() {
-
+        viewModelScope.launch {
+            val newSchedule = sortTasksAlgorithm(_buildScheduleScreenUiState.value)
+            delay(1000)
+            if(newSchedule == _buildScheduleScreenUiState.value.temporaryTasks) {
+                _newScheduleScreenUiState.value = NewScheduleScreenUiState.Failure(
+                    message = "There is no place for new task in current schedule! Please change" +
+                            "parameters for schedule build"
+                )
+            } else {
+                _newScheduleScreenUiState.value = NewScheduleScreenUiState.Success(
+                    tasks = newSchedule
+                )
+            }
+        }
     }
+
 }
 
 sealed class NewScheduleScreenUiState {

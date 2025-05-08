@@ -284,10 +284,10 @@ fun TopBarWithDatePicker(
 fun TimelineListView(
     tasks: List<TaskUiStateElement>,
     selectedDate: LocalDate,
-    filter: Set<TimelineEvents>,
     modifier: Modifier = Modifier,
-    onTaskClick: (TaskUiStateElement) -> Unit,
-    onFreeSlotClick: (String?) -> Unit
+    filter: Set<TimelineEvents> = setOf<TimelineEvents>(TimelineEvents.TASKS, TimelineEvents.FREE_SLOTS),
+    onTaskClick: (TaskUiStateElement) -> Unit = {},
+    onFreeSlotClick: (String?) -> Unit = {}
 ) {
     val currentTime = remember { mutableStateOf(LocalDateTime.now()) }
     val today = remember { LocalDate.now() }
