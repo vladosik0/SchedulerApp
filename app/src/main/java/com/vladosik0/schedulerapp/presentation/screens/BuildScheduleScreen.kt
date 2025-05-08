@@ -77,7 +77,7 @@ import java.time.format.DateTimeFormatter
 fun BuildScheduleScreen(
     viewModel: SharedScheduleScreensViewModel,
     onCancel: () -> Unit,
-    onBuildNewSchedule: () -> Unit,
+    onBuildNewSchedule: () -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val buildScheduleScreenUiState by viewModel.buildScheduleScreenUiState.collectAsState()
