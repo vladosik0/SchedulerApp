@@ -1,7 +1,6 @@
 package com.vladosik0.schedulerapp.presentation.screens
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -329,9 +328,6 @@ fun TimelineListView(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(animatedElements) { element ->
-                if(element is TimelineElement.FreeSlot) {
-                    Log.d("UI_DEBUG", element.start)
-                }
                 when (element) {
                     is TimelineElement.TaskElement -> TaskItem(
                         element.task,

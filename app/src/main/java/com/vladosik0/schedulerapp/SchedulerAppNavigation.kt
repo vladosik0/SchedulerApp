@@ -165,6 +165,9 @@ fun SchedulerAppNavigation() {
                         }
                         launchSingleTop = true
                     }
+                },
+                onTaskClick = { taskId ->
+                    navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(taskId))
                 }
             )
         }

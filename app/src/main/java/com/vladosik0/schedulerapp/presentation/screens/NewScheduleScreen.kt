@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,7 +41,8 @@ import com.vladosik0.schedulerapp.presentation.view_models.SharedScheduleScreens
 fun NewScheduleScreen(
     viewModel: SharedScheduleScreensViewModel,
     onCancel: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onTaskClick: (Int) -> Unit
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -48,7 +50,7 @@ fun NewScheduleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Schedule") }, navigationIcon = {
+                title = { Text("New Schedule for ${viewModel.getDateForNewScheduleScreen()}") }, navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -113,7 +115,35 @@ fun NewScheduleScreen(
             }
 
             is NewScheduleScreenUiState.Failure -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .padding(paddingValues = paddingValues)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = state.message,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
 
+                    TimelineListView(
+                        tasks = state.tasks,
+                        selectedDate = parseDateTimeStringToDate(state.tasks.first().startAt),
+                        modifier = Modifier.fillMaxWidth(),
+                        onTaskClick = { task ->
+                            onTaskClick(task.id)
+                        }
+                    )
+
+                    OutlinedButton(
+                        onClick = onCancel
+                    ) {
+                        Text("Cancel")
+                    }
+                }
             }
         }
     }

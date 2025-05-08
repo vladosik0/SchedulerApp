@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
+import com.vladosik0.schedulerapp.domain.formatters.getFormattedDateFromString
 import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getDateWorkloads
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getNextKeyBySortedValue
@@ -340,8 +341,9 @@ class SharedScheduleScreensViewModel(
             delay(1000)
             if(newSchedule == _buildScheduleScreenUiState.value.temporaryTasks) {
                 _newScheduleScreenUiState.value = NewScheduleScreenUiState.Failure(
+                    tasks = _buildScheduleScreenUiState.value.temporaryTasks,
                     message = "There is no place for new task in current schedule! Please change" +
-                            "parameters for schedule build"
+                            " parameters for schedule build or change existing tasks properties"
                 )
             } else {
                 _newScheduleScreenUiState.value = NewScheduleScreenUiState.Success(
@@ -351,10 +353,14 @@ class SharedScheduleScreensViewModel(
         }
     }
 
+    fun getDateForNewScheduleScreen() : String {
+        return getFormattedDateFromString(_buildScheduleScreenUiState.value.recommendedDate.atStartOfDay().toString())
+    }
+
 }
 
 sealed class NewScheduleScreenUiState {
     object Loading : NewScheduleScreenUiState()
     data class Success(val tasks: List<TaskUiStateElement>) : NewScheduleScreenUiState()
-    data class Failure(val message: String) : NewScheduleScreenUiState()
+    data class Failure(val message: String, val tasks: List<TaskUiStateElement>) : NewScheduleScreenUiState()
 }
