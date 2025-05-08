@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -204,10 +205,16 @@ fun BuildScheduleScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                if(buildScheduleScreenUiState.isRecommendedDateLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Button(
-                    onClick = {
-                        if (startDateErrorMessage == "" && finishDateErrorMessage == "") viewModel.getRecommendedDate()
-                    }) {
+                    enabled = startDateErrorMessage == "" && finishDateErrorMessage == "",
+                    onClick = { viewModel.getRecommendedDate() }
+                ) {
                     Text(text = "Get recommended date")
                 }
             }
@@ -234,7 +241,13 @@ fun BuildScheduleScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+
+                if(buildScheduleScreenUiState.areTasksLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
                 Button(
                     onClick = { viewModel.getTasksByDateInActivityPeriod() },
                     enabled = viewModel.isTextFieldEnabled() &&

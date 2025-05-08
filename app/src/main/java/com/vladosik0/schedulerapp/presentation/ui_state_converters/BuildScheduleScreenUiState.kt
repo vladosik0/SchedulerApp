@@ -14,6 +14,8 @@ data class BuildScheduleScreenUiState (
     val newTaskDifficulty: Difficulty = Difficulty.NORMAL,
     val startDate: LocalDate = LocalDate.now(),
     val finishDate: LocalDate = LocalDate.now().plusDays(4),
+    val isRecommendedDateLoading: Boolean = false,
+    val areTasksLoading: Boolean = false,
     val recommendedDate: LocalDate = LocalDate.now(),
     val temporaryTasks: MutableList<TaskUiStateElement> = mutableListOf<TaskUiStateElement>(),
     val activityPeriodStart: LocalTime = LocalTime.now(),

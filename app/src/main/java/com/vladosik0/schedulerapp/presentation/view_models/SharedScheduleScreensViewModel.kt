@@ -1,5 +1,6 @@
 package com.vladosik0.schedulerapp.presentation.view_models
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
@@ -99,7 +100,11 @@ class SharedScheduleScreensViewModel(
     }
 
     fun getRecommendedDate() {
+        _buildScheduleScreenUiState.update { it.copy(
+            isRecommendedDateLoading = true
+        ) }
         viewModelScope.launch(Dispatchers.IO) {
+            delay(500)
             val startDate = _buildScheduleScreenUiState.value.startDate
             val finishDate = _buildScheduleScreenUiState.value.finishDate
             val days = ChronoUnit.DAYS.between(startDate, finishDate)
@@ -119,11 +124,16 @@ class SharedScheduleScreensViewModel(
 
             if (_buildScheduleScreenUiState.value.newTaskPriority == Priority.HIGH &&
                     _buildScheduleScreenUiState.value.newTaskDifficulty == Difficulty.NORMAL) {
-                _buildScheduleScreenUiState.update { it.copy(recommendedDate = startDate) }
+                _buildScheduleScreenUiState.update { it.copy(
+                    recommendedDate = startDate,
+                    isRecommendedDateLoading = false
+                ) }
             } else {
-                _buildScheduleScreenUiState.update { it.copy(recommendedDate = dateWorkLoads.entries.first().key) }
+                _buildScheduleScreenUiState.update { it.copy(
+                    recommendedDate = dateWorkLoads.entries.first().key,
+                    isRecommendedDateLoading = false
+                ) }
             }
-
         }
     }
 
@@ -180,23 +190,33 @@ class SharedScheduleScreensViewModel(
 
     fun updateStartDesirablePeriodTime(startDesirableTime: LocalTime) {
         if (startDesirableTime.isAfter(_buildScheduleScreenUiState.value.desirableExecutionPeriodFinish)) {
-            _startDesirablePeriodErrorMessage.value =
-                "Start Desirable Time must be before Finish Desirable Time!"
-        } else if (!isDesirableIntervalWithinActivityInterval()) {
-            _startDesirablePeriodErrorMessage.value =
-                "Start Desirable Time must be within activity period!"
-        } else {
+            _startDesirablePeriodErrorMessage.value = "Start Desirable Time must be before Finish Desirable Time!"
+        } else if (isDesirableIntervalWithinActivityInterval()) {
             _buildScheduleScreenUiState.update { it.copy(desirableExecutionPeriodStart = startDesirableTime) }
             _startDesirablePeriodErrorMessage.value = ""
+            _finishDesirablePeriodErrorMessage.value = ""
         }
-
+        Log.d("UI_DEBUG_DESIRED_START", _startDesirablePeriodErrorMessage.value)
+        Log.d("UI_DEBUG_DESIRED_START", startDesirableTime.toString())
     }
 
-    fun isDesirableIntervalWithinActivityInterval(): Boolean {
-        val currentState = _buildScheduleScreenUiState.value
-        return !currentState.desirableExecutionPeriodStart.isBefore(currentState.activityPeriodStart) && !currentState.desirableExecutionPeriodFinish.isAfter(
-            currentState.activityPeriodFinish
-        )
+    private fun isDesirableIntervalWithinActivityInterval(
+        activityPeriodStart: LocalTime = _buildScheduleScreenUiState.value.activityPeriodStart,
+        activityPeriodFinish: LocalTime = _buildScheduleScreenUiState.value.activityPeriodFinish
+    ): Boolean {
+        return if(_buildScheduleScreenUiState.value.considerDesirableExecutionPeriod) {
+            if(_buildScheduleScreenUiState.value.desirableExecutionPeriodStart < activityPeriodStart){
+                _startDesirablePeriodErrorMessage.value = "Start Desirable Time must be within activity period!"
+                false
+            } else if (_buildScheduleScreenUiState.value.desirableExecutionPeriodFinish > activityPeriodFinish) {
+                _finishDesirablePeriodErrorMessage.value = "Finish Desirable Time must be within activity period!"
+                false
+            } else {
+                true
+            }
+        } else {
+            true
+        }
     }
 
     fun updateFinishActivityPeriodTime(finishActivityTime: LocalTime) {
@@ -220,7 +240,10 @@ class SharedScheduleScreensViewModel(
                 "Finish Desirable Period must be within activity period!"
         } else {
             _buildScheduleScreenUiState.update { it.copy(desirableExecutionPeriodFinish = finishDesirableTime) }
+            _startDesirablePeriodErrorMessage.value = ""
             _finishDesirablePeriodErrorMessage.value = ""
+            Log.d("UI_DEBUG_DESIRED_FINISH", _finishDesirablePeriodErrorMessage.value)
+            Log.d("UI_DEBUG_DESIRED_FINISH", finishDesirableTime.toString())
         }
     }
 
@@ -236,27 +259,37 @@ class SharedScheduleScreensViewModel(
     }
 
     fun getTasksByDateInActivityPeriod() {
+        _buildScheduleScreenUiState.update { it.copy(areTasksLoading = true) }
         val currentState = _buildScheduleScreenUiState.value
-        val activityPeriodStart = _buildScheduleScreenUiState.value.activityPeriodStart
-        val activityPeriodFinish = _buildScheduleScreenUiState.value.activityPeriodFinish
         viewModelScope.launch(Dispatchers.IO) {
-            val tasks =
-                tasksRepository.getTasksByDate(currentState.recommendedDate.toString()).first()
-                    .filter { task ->
-                        val taskStartAt = task.startAt
-                        val taskFinishAt = task.finishAt
-                        parseDateTimeStringToTime(taskStartAt) < activityPeriodFinish && parseDateTimeStringToTime(
-                            taskFinishAt
-                        ) > activityPeriodStart
-                    }
+            val tasks = tasksRepository.getTasksByDate(currentState.recommendedDate.toString()).first()
 
-            val temporaryTasksList: MutableList<TaskUiStateElement> = tasks.map {
+            val overlappingTasks = tasks.filter { task ->
+                val start = parseDateTimeStringToTime(task.startAt)
+                val end = parseDateTimeStringToTime(task.finishAt)
+                end > currentState.activityPeriodStart && start < currentState.activityPeriodFinish
+            }
+
+            val updatedActivityPeriodStart = overlappingTasks.minOfOrNull { parseDateTimeStringToTime(it.startAt) }
+                ?.let { minStart -> minOf(minStart, currentState.activityPeriodStart) }
+                ?: currentState.activityPeriodStart
+
+            val updatedActivityPeriodFinish = overlappingTasks.maxOfOrNull { parseDateTimeStringToTime(it.finishAt) }
+                ?.let { maxEnd -> maxOf(maxEnd, currentState.activityPeriodFinish) }
+                ?: currentState.activityPeriodFinish
+
+            val temporaryTasksList: MutableList<TaskUiStateElement> = overlappingTasks.map {
                 it.toTaskUiStateElement()
             }.toMutableList()
 
-            _buildScheduleScreenUiState.value =
-                currentState.copy(temporaryTasks = temporaryTasksList)
-
+            _buildScheduleScreenUiState.value = currentState.copy(
+                temporaryTasks = temporaryTasksList,
+                activityPeriodStart = updatedActivityPeriodStart,
+                activityPeriodFinish = updatedActivityPeriodFinish,
+                desirableExecutionPeriodStart = updatedActivityPeriodStart,
+                desirableExecutionPeriodFinish = updatedActivityPeriodFinish,
+                areTasksLoading = false
+            )
         }
     }
 
@@ -273,7 +306,7 @@ class SharedScheduleScreensViewModel(
             _buildScheduleScreenUiState.value.activityPeriodStart,
             _buildScheduleScreenUiState.value.activityPeriodFinish
         ).toMinutes().toInt()
-        if (minutes >= desirablePeriodDuration && _buildScheduleScreenUiState.value.considerDesirableExecutionPeriod) {
+        if (minutes > desirablePeriodDuration && _buildScheduleScreenUiState.value.considerDesirableExecutionPeriod) {
             _noFreeTimeForNewTaskErrorMessage.value = "Duration of the task is bigger than desirable period!"
             return false
         } else if(minutes >= activityPeriodDuration){
@@ -298,6 +331,7 @@ class SharedScheduleScreensViewModel(
             it.copy(
                 considerDesirableExecutionPeriod = !_buildScheduleScreenUiState.value.considerDesirableExecutionPeriod
             ) }
+        isDesirableIntervalWithinActivityInterval()
     }
 
     private val _newScheduleScreenUiState = MutableStateFlow<NewScheduleScreenUiState>(

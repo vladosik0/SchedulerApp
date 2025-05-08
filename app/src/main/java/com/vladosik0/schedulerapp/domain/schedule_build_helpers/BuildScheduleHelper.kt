@@ -3,7 +3,6 @@ package com.vladosik0.schedulerapp.domain.schedule_build_helpers
 import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.getDuration
-import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
 import java.time.LocalDate
@@ -73,8 +72,8 @@ fun sortTasksAlgorithm(
     }.sortedBy { it.first }
 
     val freeIntervals = mutableListOf<Pair<LocalDateTime, LocalDateTime>>()
-    val dayStart = LocalDateTime.of(date, parseDateTimeStringToTime(fixedTasks.first().startAt))
-    val dayEnd = LocalDateTime.of(date, parseDateTimeStringToTime(fixedTasks.first().finishAt))
+    val dayStart = LocalDateTime.of(date, buildScheduleScreenUiState.activityPeriodStart)
+    val dayEnd = LocalDateTime.of(date, buildScheduleScreenUiState.activityPeriodFinish)
 
     var current = dayStart
     for((start, end) in occupiedIntervals) {

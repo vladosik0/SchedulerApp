@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -76,9 +74,9 @@ fun NewScheduleScreen(
             }
             is NewScheduleScreenUiState.Success -> {
                 Box(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .nestedScroll(scrollBehavior.nestedScrollConnection)
-                        .verticalScroll(rememberScrollState())
                         .padding(paddingValues = paddingValues)
                 ) {
                     TimelineListView(
@@ -88,10 +86,16 @@ fun NewScheduleScreen(
                     )
 
                     Row(
-                        modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp).zIndex(1f),
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(24.dp)
+                            .zIndex(1f)
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        OutlinedButton(onClick = onCancel) {
+                        OutlinedButton(
+                            onClick = onCancel
+                        ) {
                             Text("Cancel")
                         }
                         Button(
@@ -100,7 +104,8 @@ fun NewScheduleScreen(
                                     context, "Schedule saved successfully", Toast.LENGTH_SHORT
                                 ).show()
                                 onSave()
-                            }) {
+                            }
+                        ) {
                             Text("Save Schedule")
                         }
                     }
