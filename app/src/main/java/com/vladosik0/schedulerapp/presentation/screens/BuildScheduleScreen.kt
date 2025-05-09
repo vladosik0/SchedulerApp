@@ -203,8 +203,6 @@ fun BuildScheduleScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
                 if(buildScheduleScreenUiState.isRecommendedDateLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.height(8.dp))
