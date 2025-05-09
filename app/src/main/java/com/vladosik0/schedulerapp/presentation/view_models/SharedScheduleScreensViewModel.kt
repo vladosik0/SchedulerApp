@@ -1,5 +1,6 @@
 package com.vladosik0.schedulerapp.presentation.view_models
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
@@ -64,7 +65,7 @@ class SharedScheduleScreensViewModel(
     private val _noFreeTimeForNewTaskErrorMessage = MutableStateFlow("")
     val noFreeTimeForNewTaskErrorMessage: StateFlow<String> = _noFreeTimeForNewTaskErrorMessage
 
-    private val dateWorkLoads = mutableMapOf<LocalDate, Int>()
+    private val dateWorkLoads = emptyMap<LocalDate, Int>().toMutableMap()
 
     private val allTasksForRecommendedDate = mutableListOf<TaskUiStateElement>()
 
@@ -92,6 +93,7 @@ class SharedScheduleScreensViewModel(
             _buildScheduleScreenUiState.update { it.copy(startDate = startDate) }
             _startDateErrorMessage.value = ""
         }
+        dateWorkLoads.clear()
     }
 
     fun updateFinishDate(finishDate: LocalDate) {
@@ -101,6 +103,7 @@ class SharedScheduleScreensViewModel(
             _buildScheduleScreenUiState.update { it.copy(finishDate = finishDate) }
             _startDateErrorMessage.value = ""
         }
+        dateWorkLoads.clear()
     }
 
     fun getRecommendedDate() {
@@ -189,10 +192,12 @@ class SharedScheduleScreensViewModel(
                 desirableExecutionPeriodStart = startActivityTime
             ) }
             _startActivityPeriodErrorMessage.value = ""
+            _finishActivityPeriodErrorMessage.value = ""
             _buildScheduleScreenUiState.value = _buildScheduleScreenUiState.value.copy(
                 temporaryTasks = mutableListOf<TaskUiStateElement>()
             )
         }
+        Log.d("UI_DEBUG_START", "${_buildScheduleScreenUiState.value.activityPeriodStart}")
     }
 
     fun updateStartDesirablePeriodTime(startDesirableTime: LocalTime) {
@@ -233,10 +238,12 @@ class SharedScheduleScreensViewModel(
                 desirableExecutionPeriodFinish = finishActivityTime
             ) }
             _finishActivityPeriodErrorMessage.value = ""
+            _startActivityPeriodErrorMessage.value = ""
             _buildScheduleScreenUiState.value = _buildScheduleScreenUiState.value.copy(
                 temporaryTasks = mutableListOf<TaskUiStateElement>()
             )
         }
+        Log.d("UI_DEBUG_FINISH", "${_buildScheduleScreenUiState.value.activityPeriodFinish}")
     }
 
     fun updateFinishDesirablePeriodTime(finishDesirableTime: LocalTime) {
