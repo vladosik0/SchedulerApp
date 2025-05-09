@@ -45,6 +45,7 @@ class TaskEditScreenViewModel (
                         .collect {
                             delay(1000)
                             _taskEditScreenUiState.value = it.copy(isLoading = false)
+                            _areTextFieldsValid.value = true
                         }
                 }
             }
@@ -109,17 +110,14 @@ class TaskEditScreenViewModel (
 
     fun updateDate(date: LocalDate) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(date = date)
-        checkTaskValidation()
     }
 
     fun updateStartTime(startTime: LocalTime) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(startTime = startTime)
-        checkTaskValidation()
     }
 
     fun updateFinishTime(finishTime: LocalTime) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(finishTime = finishTime)
-        checkTaskValidation()
     }
 
     fun updatePriority(priority: Priority) {
@@ -131,7 +129,6 @@ class TaskEditScreenViewModel (
     }
 
     private fun validateTextFields() {
-
         val title = _taskEditScreenUiState.value.title
         _areTextFieldsValid.value = !(title.length > 50 || title.isBlank())
 
@@ -142,7 +139,7 @@ class TaskEditScreenViewModel (
         _areTextFieldsValid.value = !(category.length > 50 || category.isBlank())
     }
 
-    private fun checkTaskValidation() {
+    private suspend fun checkTaskValidation() {
 
         var isValid = _areTextFieldsValid.value
 
@@ -166,7 +163,6 @@ class TaskEditScreenViewModel (
         val newTaskFinishAt =
             _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.finishTime)
 
-        viewModelScope.launch {
             val tasks =
                 tasksRepository.getTasksByDate(_taskEditScreenUiState.value.date.toString()).first()
 
@@ -183,15 +179,17 @@ class TaskEditScreenViewModel (
                 _saveTaskErrorMessage.value = ""
             }
             _isTaskValid.value = isValid
-        }
     }
 
     fun saveTask() {
         viewModelScope.launch {
-            if (taskId != null) {
-                tasksRepository.updateTask(_taskEditScreenUiState.value.toTask(taskId.toInt()))
-            } else {
-                tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
+            checkTaskValidation()
+            if(_isTaskValid.value) {
+                if (taskId != null) {
+                    tasksRepository.updateTask(_taskEditScreenUiState.value.toTask(taskId.toInt()))
+                } else {
+                    tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
+                }
             }
         }
     }

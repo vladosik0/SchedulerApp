@@ -419,6 +419,7 @@ class SharedScheduleScreensViewModel(
             recommendedDate = LocalDate.now(),
             temporaryTasks = mutableListOf()
         ) }
+        newSchedule.clear()
     }
 
     fun updateNewScheduleScreenUiState() {
@@ -434,6 +435,7 @@ class SharedScheduleScreensViewModel(
                     tasksRepository.updateTask(task.toTask())
                 }
             }
+            cleanUiStates()
             delay(1000)
         }
     }

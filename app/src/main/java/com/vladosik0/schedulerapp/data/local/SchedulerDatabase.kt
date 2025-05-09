@@ -1,11 +1,9 @@
-package com.vladosik0.schedulerapp.data
+package com.vladosik0.schedulerapp.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.vladosik0.schedulerapp.data.local.Task
-import com.vladosik0.schedulerapp.data.local.TaskDao
 
 @Database(
     entities = [Task::class],
@@ -20,7 +18,7 @@ abstract class SchedulerDatabase: RoomDatabase() {
         private var Instance: SchedulerDatabase? = null
         fun getDatabase(context: Context): SchedulerDatabase{
             return Instance ?: synchronized(this){
-                Room.databaseBuilder(context,SchedulerDatabase::class.java,"scheduler_database")
+                Room.databaseBuilder(context, SchedulerDatabase::class.java, "scheduler_database")
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { Instance = it }

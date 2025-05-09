@@ -40,11 +40,6 @@ fun <K, V : Comparable<V>> getNextKeyBySortedValue(map: Map<K, V>, currentKey: K
     } else currentKey
 }
 
-/**val desirableStart = LocalDateTime.of(
-    buildScheduleScreenUiState.recommendedDate, buildScheduleScreenUiState.desirableExecutionPeriodStart
-val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-)**/
-
 fun <K, V : Comparable<V>> getPreviousKeyBySortedValue(map: Map<K, V>, currentKey: K): K {
     val sortedKeys = map.entries
         .sortedBy { it.value }

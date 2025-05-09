@@ -86,6 +86,8 @@ fun TaskEditScreen(
 
     val initialTask by viewModel.taskEditScreenUiState.collectAsState()
 
+    val isTaskValid by viewModel.isTaskValid.collectAsState()
+
     val topAppBarTitle = viewModel.topAppBarTitle
 
     var notificationsExpanded by rememberSaveable { mutableStateOf(false) }
@@ -94,7 +96,6 @@ fun TaskEditScreen(
     val finishTimeErrorMessage by viewModel.finishTimeErrorMessage.collectAsState()
     val saveTaskErrorMessage by viewModel.saveTaskErrorMessage.collectAsState()
 
-    val isTaskValid by viewModel.isTaskValid.collectAsState()
     val areTextFieldsValid by viewModel.areTextFieldsValid.collectAsState()
 
     if(initialTask.isLoading) {
@@ -276,11 +277,22 @@ fun TaskEditScreen(
                         Text("Cancel")
                     }
                     Button(
-                        enabled = isTaskValid, onClick = {
+                        onClick = {
                             viewModel.saveTask()
-                            Toast.makeText(context, "Task saved successfully", Toast.LENGTH_SHORT)
-                                .show()
-                            onCancel()
+                            if(isTaskValid) {
+                                Toast.makeText(
+                                    context,
+                                    "Task saved successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                onCancel()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "There are issues with input data",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }) {
                         Text("Save")
                     }

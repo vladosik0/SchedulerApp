@@ -26,6 +26,7 @@ import com.vladosik0.schedulerapp.presentation.view_models.SharedScheduleScreens
 @Composable
 fun SchedulerAppNavigation() {
     val navController = rememberAnimatedNavController()
+
     val sharedScheduleScreensViewModel: SharedScheduleScreensViewModel = viewModel(
         factory = AppViewModelProvider.Factory
     )
@@ -199,9 +200,5 @@ fun SchedulerAppNavigation() {
                 }
             )
         }
-
-
-
-
     }
 }
