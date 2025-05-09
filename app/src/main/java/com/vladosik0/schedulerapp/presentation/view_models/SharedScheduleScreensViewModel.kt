@@ -400,9 +400,6 @@ class SharedScheduleScreensViewModel(
                 }
         }
     }
-
-
-
 }
 
 sealed class NewScheduleScreenUiState {
