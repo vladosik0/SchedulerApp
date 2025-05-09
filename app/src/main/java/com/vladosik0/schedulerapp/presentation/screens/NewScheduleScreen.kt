@@ -142,7 +142,6 @@ fun NewScheduleScreen(
                         onTaskClick = { task ->
                             onTaskClick(task.id)
                             viewModel.cleanUiStates()
-                            onCancel()
                         }
                     )
 

@@ -14,6 +14,11 @@ sealed class NavigationRoutes(val route: String) {
         fun createRoute(taskId: Int) = "task_edit_screen/$taskId"
     }
 
+    object TaskEditScreenForSchedule: NavigationRoutes("task_edit_screen_for_schedule/{taskId}") {
+        fun createRoute(taskId: Int) =
+            "task_edit_screen_for_Schedule/$taskId"
+    }
+
     object TaskCreateScreen : NavigationRoutes("task_create_screen/{date}") {
         fun createRoute(date: LocalDate) = "task_create_screen/${date}"
     }

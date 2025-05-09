@@ -167,9 +167,41 @@ fun SchedulerAppNavigation() {
                     }
                 },
                 onTaskClick = { taskId ->
-                    navController.navigate(NavigationRoutes.TaskEditScreen.createRoute(taskId))
+                    navController.navigate(NavigationRoutes.TaskEditScreenForSchedule.createRoute(taskId))
                 }
             )
         }
+
+        composable(
+            route = NavigationRoutes.TaskEditScreenForSchedule.route,
+            arguments = listOf(
+                navArgument("taskId") { type = NavType.IntType }
+            ),
+            enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(600)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(600)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(600)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(600)) }
+        ) {
+            TaskEditScreen(
+                onCancel = {
+                    navController.popBackStack()
+                    navController.popBackStack() },
+                onScheduleBuildButtonClick = { uiState ->
+                    navController.navigate(NavigationRoutes.BuildScheduleScreen.createRoute(
+                        taskId = uiState.id,
+                        title = uiState.title,
+                        description = if(uiState.description == "") "No Description" else uiState.description,
+                        category = uiState.category,
+                        difficulty = if(uiState.difficulty == Difficulty.HIGH) 2 else 1,
+                        priority = if(uiState.priority == Priority.HIGH) 2 else 1
+                    )
+                    )
+                }
+            )
+        }
+
+
+
+
     }
 }
