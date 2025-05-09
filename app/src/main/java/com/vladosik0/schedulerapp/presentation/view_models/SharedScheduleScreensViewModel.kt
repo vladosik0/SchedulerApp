@@ -378,17 +378,8 @@ class SharedScheduleScreensViewModel(
 
     fun buildSchedule() {
         viewModelScope.launch {
-            newSchedule.addAll(sortTasksAlgorithm(_buildScheduleScreenUiState.value))
-            for (i in allTasksForRecommendedDate.indices) {
-                val newTask = newSchedule.find {
-                    it.id == allTasksForRecommendedDate[i].id
-                }
-                if(newTask != null) {
-                    allTasksForRecommendedDate[i] = newTask
-                }
-            }
-            allTasksForRecommendedDate.add(newSchedule.find { it.id == 0 }!!)
             delay(1000)
+            newSchedule.addAll(sortTasksAlgorithm(_buildScheduleScreenUiState.value))
             if(newSchedule == _buildScheduleScreenUiState.value.temporaryTasks) {
                 _newScheduleScreenUiState.value = NewScheduleScreenUiState.Failure(
                     tasks = allTasksForRecommendedDate,
@@ -396,6 +387,18 @@ class SharedScheduleScreensViewModel(
                             " parameters for schedule build or change existing tasks properties"
                 )
             } else {
+                for (i in allTasksForRecommendedDate.indices) {
+                    val newTask = newSchedule.find {
+                        it.id == allTasksForRecommendedDate[i].id
+                    }
+                    if(newTask != null) {
+                        allTasksForRecommendedDate[i] = newTask
+                    }
+                }
+                val newCreatedTask = newSchedule.find { it.id == 0 }
+                if(newCreatedTask != null) {
+                    allTasksForRecommendedDate.add(newCreatedTask)
+                }
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
                 allTasksForRecommendedDate.sortBy { LocalDateTime.parse(it.startAt, formatter) }
                 _newScheduleScreenUiState.value = NewScheduleScreenUiState.Success(
