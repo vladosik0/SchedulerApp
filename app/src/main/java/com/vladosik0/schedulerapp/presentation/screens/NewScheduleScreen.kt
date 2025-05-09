@@ -108,6 +108,8 @@ fun NewScheduleScreen(
                         }
                         Button(
                             onClick = {
+                                viewModel.updateNewScheduleScreenUiState()
+                                viewModel.onSaveSchedule()
                                 Toast.makeText(
                                     context, "Schedule saved successfully", Toast.LENGTH_SHORT
                                 ).show()

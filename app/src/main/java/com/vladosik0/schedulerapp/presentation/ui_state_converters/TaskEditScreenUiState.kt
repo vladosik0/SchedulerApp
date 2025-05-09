@@ -14,7 +14,7 @@ data class TaskEditScreenUiState(
     val startTime: LocalTime = LocalTime.now(),
     val finishTime: LocalTime = LocalTime.now().plusMinutes(30),
     val title: String = "",
-    val description: String = "",
+    val description: String = "No Description",
     val category: String = "",
     val difficulty: Difficulty = Difficulty.NORMAL,
     val priority: Priority = Priority.LOW,

@@ -13,6 +13,7 @@ import com.vladosik0.schedulerapp.domain.schedule_build_helpers.getPreviousKeyBy
 import com.vladosik0.schedulerapp.domain.schedule_build_helpers.sortTasksAlgorithm
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
+import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTask
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTaskUiStateElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -321,6 +322,8 @@ class SharedScheduleScreensViewModel(
         }
     }
 
+    private val newSchedule = mutableListOf<TaskUiStateElement>()
+
     fun isBuildScheduleButtonAvailable(): Boolean {
         return isTextFieldEnabled() &&
                 _buildScheduleScreenUiState.value.temporaryTasks != BuildScheduleScreenUiState().temporaryTasks &&
@@ -343,7 +346,7 @@ class SharedScheduleScreensViewModel(
 
     fun buildSchedule() {
         viewModelScope.launch {
-            val newSchedule = sortTasksAlgorithm(_buildScheduleScreenUiState.value)
+            newSchedule.addAll(sortTasksAlgorithm(_buildScheduleScreenUiState.value))
             for (i in allTasksForRecommendedDate.indices) {
                 val newTask = newSchedule.find {
                     it.id == allTasksForRecommendedDate[i].id
@@ -389,7 +392,12 @@ class SharedScheduleScreensViewModel(
 
     fun onSaveSchedule() {
         viewModelScope.launch {
-
+            for (task in newSchedule)
+                if(task.id == 0) {
+                    tasksRepository.insertTask(task.toTask())
+                } else {
+                    tasksRepository.updateTask(task.toTask())
+                }
         }
     }
 
