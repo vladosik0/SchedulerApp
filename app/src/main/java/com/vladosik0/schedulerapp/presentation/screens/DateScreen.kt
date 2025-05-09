@@ -475,6 +475,7 @@ fun TaskFiltersRow(
                 FilterChipRow(
                     items = categories,
                     selectedItems = selectedCategories,
+                    usePrettyFormat = false,
                     onItemSelected = { category ->
                         onCategorySelected(category)
                     },
@@ -509,6 +510,7 @@ fun TaskFiltersRow(
 fun FilterChipRow(
     items: List<String>,
     selectedItems: Set<String>,
+    usePrettyFormat: Boolean = true,
     onItemSelected: (String) -> Unit,
     horizontalArrangement: Arrangement.Horizontal = Arrangement.SpaceAround
 ) {
@@ -522,7 +524,12 @@ fun FilterChipRow(
             FilterChip(
                 selected = isSelected,
                 onClick = { onItemSelected(item) },
-                label = { Text(item.toPrettyFormat()) },
+                label = {
+                    if(usePrettyFormat) {
+                        Text(item.toPrettyFormat())
+                    } else {
+                        Text(item)
+                    } },
                 shape = RoundedCornerShape(20.dp),
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.tertiary,

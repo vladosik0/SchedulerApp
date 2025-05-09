@@ -173,7 +173,7 @@ class TaskEditScreenViewModel (
             val hasOverlap = tasks.any { task ->
                 val taskStartAt = LocalDateTime.parse(task.startAt)
                 val taskFinishAt = LocalDateTime.parse(task.finishAt)
-                newTaskStartAt < taskFinishAt && newTaskFinishAt >= taskStartAt && task.id != taskId
+                newTaskStartAt < taskFinishAt && newTaskFinishAt > taskStartAt && task.id != taskId
             }
 
             if (hasOverlap) {
