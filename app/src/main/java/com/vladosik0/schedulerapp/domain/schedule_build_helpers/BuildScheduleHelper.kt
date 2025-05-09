@@ -161,6 +161,13 @@ fun sortTasksAlgorithm(buildScheduleScreenUiState: BuildScheduleScreenUiState): 
     val placedHigh = tryPlaceTasks(highPriorityUnfixedTasks, freeIntervals)
     val placedLow = tryPlaceTasks(lowPriorityUnfixedTasks, freeIntervals)
 
+    val totalUnfixedCount = highPriorityUnfixedTasks.size + lowPriorityUnfixedTasks.size
+    val totalPlacedCount = placedHigh.size + placedLow.size
+
+    if (totalPlacedCount < totalUnfixedCount) {
+        return buildScheduleScreenUiState.temporaryTasks
+    }
+
     val allTasks = (fixedTasks + placedHigh + placedLow).sortedBy {
         LocalDateTime.parse(it.startAt, formatter)
     }.toMutableList()

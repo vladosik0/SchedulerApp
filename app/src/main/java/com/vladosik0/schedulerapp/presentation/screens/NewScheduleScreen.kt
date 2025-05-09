@@ -51,7 +51,10 @@ fun NewScheduleScreen(
         topBar = {
             TopAppBar(
                 title = { Text("New Schedule for ${viewModel.getDateForNewScheduleScreen()}") }, navigationIcon = {
-                    IconButton(onClick = onCancel) {
+                    IconButton(onClick = {
+                        onCancel()
+                        viewModel.updateNewScheduleScreenUiState()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -96,7 +99,10 @@ fun NewScheduleScreen(
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
                         OutlinedButton(
-                            onClick = onCancel
+                            onClick = {
+                                onCancel()
+                                viewModel.updateNewScheduleScreenUiState()
+                            }
                         ) {
                             Text("Cancel")
                         }
@@ -135,11 +141,16 @@ fun NewScheduleScreen(
                         modifier = Modifier.fillMaxWidth(),
                         onTaskClick = { task ->
                             onTaskClick(task.id)
+                            viewModel.cleanUiStates()
+                            onCancel()
                         }
                     )
 
                     OutlinedButton(
-                        onClick = onCancel
+                        onClick = {
+                            onCancel()
+                            viewModel.updateNewScheduleScreenUiState()
+                        }
                     ) {
                         Text("Cancel")
                     }

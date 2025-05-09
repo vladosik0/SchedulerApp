@@ -2,6 +2,7 @@ package com.vladosik0.schedulerapp.presentation.view_models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
@@ -63,6 +64,8 @@ class SharedScheduleScreensViewModel(
     val noFreeTimeForNewTaskErrorMessage: StateFlow<String> = _noFreeTimeForNewTaskErrorMessage
 
     private val dateWorkLoads = mutableMapOf<LocalDate, Int>()
+
+    private val allTasksForRecommendedDate = mutableListOf<Task>()
 
     fun updateInitialBuildScheduleScreenUiState(
         id: Int,
@@ -258,10 +261,13 @@ class SharedScheduleScreensViewModel(
 
     fun getTasksByDateInActivityPeriod() {
         val currentState = _buildScheduleScreenUiState.value
+        allTasksForRecommendedDate.clear()
         viewModelScope.launch(Dispatchers.IO) {
-            val tasks = tasksRepository.getTasksByDate(currentState.recommendedDate.toString()).first()
+            tasksRepository.getTasksByDate(currentState.recommendedDate.toString()).first().forEach {
+                allTasksForRecommendedDate.add(it)
+            }
 
-            val overlappingTasks = tasks.filter { task ->
+            val overlappingTasks = allTasksForRecommendedDate.filter { task ->
                 val start = parseDateTimeStringToTime(task.startAt)
                 val end = parseDateTimeStringToTime(task.finishAt)
                 end > currentState.activityPeriodStart && start < currentState.activityPeriodFinish
@@ -355,6 +361,19 @@ class SharedScheduleScreensViewModel(
 
     fun getDateForNewScheduleScreen() : String {
         return getFormattedDateFromString(_buildScheduleScreenUiState.value.recommendedDate.atStartOfDay().toString())
+    }
+
+    fun cleanUiStates() {
+        dateWorkLoads.clear()
+        allTasksForRecommendedDate.clear()
+        _buildScheduleScreenUiState.update { it.copy(
+            recommendedDate = LocalDate.now(),
+            temporaryTasks = mutableListOf()
+        ) }
+    }
+
+    fun updateNewScheduleScreenUiState() {
+        _newScheduleScreenUiState.value = NewScheduleScreenUiState.Loading
     }
 
 }
