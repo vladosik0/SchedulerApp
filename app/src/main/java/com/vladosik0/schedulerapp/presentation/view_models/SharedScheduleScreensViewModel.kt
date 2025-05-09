@@ -300,7 +300,7 @@ class SharedScheduleScreensViewModel(
         _buildScheduleScreenUiState.update { it.copy(newTaskDurationInMinutes = minutes) }
     }
 
-    fun validateDurationMinutes(minutes: Int): Boolean {
+    fun validateDurationMinutes(minutesString: String) {
         val desirablePeriodDuration = Duration.between(
             _buildScheduleScreenUiState.value.desirableExecutionPeriodStart,
             _buildScheduleScreenUiState.value.desirableExecutionPeriodFinish
@@ -309,16 +309,29 @@ class SharedScheduleScreensViewModel(
             _buildScheduleScreenUiState.value.activityPeriodStart,
             _buildScheduleScreenUiState.value.activityPeriodFinish
         ).toMinutes().toInt()
-        if (minutes > desirablePeriodDuration && _buildScheduleScreenUiState.value.considerDesirableExecutionPeriod) {
-            _noFreeTimeForNewTaskErrorMessage.value = "Duration of the task is bigger than desirable period!"
-            return false
-        } else if(minutes >= activityPeriodDuration){
-            _noFreeTimeForNewTaskErrorMessage.value = "Duration of the task is bigger than activity period!"
-            return false
-        } else {
-            onChangeNewTaskDuration(minutes)
-            _noFreeTimeForNewTaskErrorMessage.value = ""
-            return true
+        val minutes = minutesString.toIntOrNull()
+        when {
+            minutesString.isBlank() -> {
+                _noFreeTimeForNewTaskErrorMessage.value = "Please enter task duration"
+                _buildScheduleScreenUiState.update { it.copy(isTaskDurationMinutesValid = false) }
+            }
+            minutes == null -> {
+                _noFreeTimeForNewTaskErrorMessage.value = "Invalid input format for number!"
+                _buildScheduleScreenUiState.update { it.copy(isTaskDurationMinutesValid = false) }
+            }
+            minutes > desirablePeriodDuration && _buildScheduleScreenUiState.value.considerDesirableExecutionPeriod -> {
+                _noFreeTimeForNewTaskErrorMessage.value = "Duration of the task is bigger than desirable period!"
+                _buildScheduleScreenUiState.update { it.copy(isTaskDurationMinutesValid = false) }
+            }
+            minutes >= activityPeriodDuration -> {
+                _noFreeTimeForNewTaskErrorMessage.value = "Duration of the task is bigger than activity period!"
+                _buildScheduleScreenUiState.update { it.copy(isTaskDurationMinutesValid = false) }
+            }
+            else -> {
+                _noFreeTimeForNewTaskErrorMessage.value = ""
+                onChangeNewTaskDuration(minutes)
+                _buildScheduleScreenUiState.update { it.copy(isTaskDurationMinutesValid = true) }
+            }
         }
     }
 
@@ -327,8 +340,7 @@ class SharedScheduleScreensViewModel(
     fun isBuildScheduleButtonAvailable(): Boolean {
         return isTextFieldEnabled() &&
                 _buildScheduleScreenUiState.value.temporaryTasks != BuildScheduleScreenUiState().temporaryTasks &&
-                validateDurationMinutes(_buildScheduleScreenUiState.value.newTaskDurationInMinutes) &&
-                isDesirableIntervalWithinActivityInterval()
+                _buildScheduleScreenUiState.value.isTaskDurationMinutesValid && isDesirableIntervalWithinActivityInterval()
     }
 
     fun changeDesiredPeriodUsageStatus() {

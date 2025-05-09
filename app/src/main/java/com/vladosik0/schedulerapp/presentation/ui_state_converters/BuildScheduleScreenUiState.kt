@@ -22,5 +22,6 @@ data class BuildScheduleScreenUiState (
     val desirableExecutionPeriodStart: LocalTime = LocalTime.now(),
     val desirableExecutionPeriodFinish: LocalTime = LocalTime.now().plusHours(8),
     val considerDesirableExecutionPeriod: Boolean = false,
-    val newTaskDurationInMinutes: Int = 30
+    val newTaskDurationInMinutes: Int = 30,
+    val isTaskDurationMinutesValid: Boolean = true
 )

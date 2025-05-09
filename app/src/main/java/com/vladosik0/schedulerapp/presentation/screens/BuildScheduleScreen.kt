@@ -304,8 +304,7 @@ fun BuildScheduleScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             InputField(
-                value = buildScheduleScreenUiState.newTaskDurationInMinutes,
-                onValueChange = { viewModel.validateDurationMinutes(it) },
+                onValueChange = { viewModel.validateDurationMinutes(it.toString()) },
                 errorMessage = durationErrorMessage,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -483,28 +482,19 @@ fun TaskTable(
 
 @Composable
 fun InputField(
-    value: Int,
-    onValueChange: (Int) -> Unit,
+    onValueChange: (String) -> Unit,
     errorMessage: String,
     modifier: Modifier = Modifier
 ) {
-    var text by remember { mutableStateOf(value.toString()) }
-    var isError by remember { mutableStateOf(false) }
+    var durationInput by remember{mutableStateOf("30")}
 
     OutlinedTextField(
-        value = text,
+        value = durationInput,
         onValueChange = {
-            text = it
-            val parsed = it.toIntOrNull()
-            if (parsed != null) {
-                isError = false
-                onValueChange(parsed)
-            } else {
-                isError = true
-            }
-        },
+            durationInput = it
+            onValueChange(it) },
         label = { Text("Approx. new task duration(min)") },
-        isError = isError,
+        isError = errorMessage != "",
         modifier = modifier,
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         singleLine = true
