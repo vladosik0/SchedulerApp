@@ -7,7 +7,6 @@ import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTask
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTaskUiStateElement
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +22,7 @@ class TaskDetailsScreenViewModel(
 
     init {
         if(taskId != null) {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch {
                 tasksRepository.getTaskStream(taskId)
                     .map { TaskDetailsUiState.Success(it?.toTaskUiStateElement() ?: TaskUiStateElement()) }
                     .collect {
@@ -52,7 +51,7 @@ class TaskDetailsScreenViewModel(
         if(currentState is TaskDetailsUiState.Success) {
             val updatedTask = currentState.task.copy(isDone = !currentState.task.isDone)
             _taskDetailsUiState.value = TaskDetailsUiState.Success(task = updatedTask)
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch {
                 tasksRepository.updateTask(task = updatedTask.toTask())
             }
         }

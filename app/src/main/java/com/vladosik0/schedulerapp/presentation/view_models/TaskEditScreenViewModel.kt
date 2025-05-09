@@ -12,7 +12,6 @@ import com.vladosik0.schedulerapp.domain.parsers.parseDateTimeStringToTime
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.toEditTaskScreenUiState
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTask
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +39,7 @@ class TaskEditScreenViewModel (
     init {
         when {
             taskId != null -> {
-                viewModelScope.launch(Dispatchers.IO) {
+                viewModelScope.launch {
                     tasksRepository.getTaskStream(taskId)
                         .map { it?.toEditTaskScreenUiState() ?: TaskEditScreenUiState() }
                         .collect {
@@ -167,7 +166,7 @@ class TaskEditScreenViewModel (
         val newTaskFinishAt =
             _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.finishTime)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val tasks =
                 tasksRepository.getTasksByDate(_taskEditScreenUiState.value.date.toString()).first()
 
@@ -188,7 +187,7 @@ class TaskEditScreenViewModel (
     }
 
     fun saveTask() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             if (taskId != null) {
                 tasksRepository.updateTask(_taskEditScreenUiState.value.toTask(taskId.toInt()))
             } else {
