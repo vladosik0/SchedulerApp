@@ -404,12 +404,14 @@ class SharedScheduleScreensViewModel(
 
     fun onSaveSchedule() {
         viewModelScope.launch {
-            for (task in newSchedule)
-                if(task.id == 0) {
+            for (task in newSchedule) {
+                if (task.id == 0) {
                     tasksRepository.insertTask(task.toTask())
                 } else {
                     tasksRepository.updateTask(task.toTask())
                 }
+            }
+            delay(1000)
         }
     }
 }
