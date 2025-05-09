@@ -277,6 +277,7 @@ fun TaskEditScreen(
                         Text("Cancel")
                     }
                     Button(
+                        enabled = areTextFieldsValid && startTimeErrorMessage== "" && finishTimeErrorMessage== "",
                         onClick = {
                             viewModel.saveTask()
                             if(isTaskValid) {

@@ -130,17 +130,15 @@ class TaskEditScreenViewModel (
 
     private fun validateTextFields() {
         val title = _taskEditScreenUiState.value.title
-        _areTextFieldsValid.value = !(title.length > 50 || title.isBlank())
-
         val description = _taskEditScreenUiState.value.description
-        _areTextFieldsValid.value = description.length <= 250
-
         val category = _taskEditScreenUiState.value.category
-        _areTextFieldsValid.value = !(category.length > 50 || category.isBlank())
+
+        _areTextFieldsValid.value = !(title.length > 50 || title.isBlank()) && description.length <= 250
+                && !(category.length > 50 || category.isBlank())
     }
 
     private suspend fun checkTaskValidation() {
-
+        validateTextFields()
         var isValid = _areTextFieldsValid.value
 
         val startTime = _taskEditScreenUiState.value.startTime
