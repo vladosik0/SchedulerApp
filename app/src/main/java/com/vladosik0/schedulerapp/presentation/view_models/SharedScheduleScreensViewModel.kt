@@ -2,7 +2,6 @@ package com.vladosik0.schedulerapp.presentation.view_models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vladosik0.schedulerapp.data.local.Task
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
@@ -15,7 +14,6 @@ import com.vladosik0.schedulerapp.domain.schedule_build_helpers.sortTasksAlgorit
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.BuildScheduleScreenUiState
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskUiStateElement
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.toTaskUiStateElement
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -29,6 +27,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class SharedScheduleScreensViewModel(
     private val tasksRepository: TasksRepository
@@ -65,7 +65,7 @@ class SharedScheduleScreensViewModel(
 
     private val dateWorkLoads = mutableMapOf<LocalDate, Int>()
 
-    private val allTasksForRecommendedDate = mutableListOf<Task>()
+    private val allTasksForRecommendedDate = mutableListOf<TaskUiStateElement>()
 
     fun updateInitialBuildScheduleScreenUiState(
         id: Int,
@@ -106,7 +106,7 @@ class SharedScheduleScreensViewModel(
         _buildScheduleScreenUiState.update { it.copy(
             isRecommendedDateLoading = true
         ) }
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             delay(500)
             val startDate = _buildScheduleScreenUiState.value.startDate
             val finishDate = _buildScheduleScreenUiState.value.finishDate
@@ -262,9 +262,9 @@ class SharedScheduleScreensViewModel(
     fun getTasksByDateInActivityPeriod() {
         val currentState = _buildScheduleScreenUiState.value
         allTasksForRecommendedDate.clear()
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             tasksRepository.getTasksByDate(currentState.recommendedDate.toString()).first().forEach {
-                allTasksForRecommendedDate.add(it)
+                allTasksForRecommendedDate.add(it.toTaskUiStateElement())
             }
 
             val overlappingTasks = allTasksForRecommendedDate.filter { task ->
@@ -282,7 +282,7 @@ class SharedScheduleScreensViewModel(
                 ?: currentState.activityPeriodFinish
 
             val temporaryTasksList: MutableList<TaskUiStateElement> = overlappingTasks.map {
-                it.toTaskUiStateElement()
+                it
             }.toMutableList()
 
             _buildScheduleScreenUiState.value = currentState.copy(
@@ -344,16 +344,27 @@ class SharedScheduleScreensViewModel(
     fun buildSchedule() {
         viewModelScope.launch {
             val newSchedule = sortTasksAlgorithm(_buildScheduleScreenUiState.value)
+            for (i in allTasksForRecommendedDate.indices) {
+                val newTask = newSchedule.find {
+                    it.id == allTasksForRecommendedDate[i].id
+                }
+                if(newTask != null) {
+                    allTasksForRecommendedDate[i] = newTask
+                }
+            }
+            allTasksForRecommendedDate.add(newSchedule.find { it.id == 0 }!!)
             delay(1000)
             if(newSchedule == _buildScheduleScreenUiState.value.temporaryTasks) {
                 _newScheduleScreenUiState.value = NewScheduleScreenUiState.Failure(
-                    tasks = _buildScheduleScreenUiState.value.temporaryTasks,
+                    tasks = allTasksForRecommendedDate,
                     message = "There is no place for new task in current schedule! Please change" +
                             " parameters for schedule build or change existing tasks properties"
                 )
             } else {
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+                allTasksForRecommendedDate.sortBy { LocalDateTime.parse(it.startAt, formatter) }
                 _newScheduleScreenUiState.value = NewScheduleScreenUiState.Success(
-                    tasks = newSchedule
+                    tasks = allTasksForRecommendedDate
                 )
             }
         }
@@ -375,6 +386,14 @@ class SharedScheduleScreensViewModel(
     fun updateNewScheduleScreenUiState() {
         _newScheduleScreenUiState.value = NewScheduleScreenUiState.Loading
     }
+
+    fun onSaveSchedule() {
+        viewModelScope.launch {
+
+        }
+    }
+
+
 
 }
 

@@ -74,7 +74,7 @@ fun sortTasksAlgorithm(buildScheduleScreenUiState: BuildScheduleScreenUiState): 
         id = buildScheduleScreenUiState.newTaskId,
         title = buildScheduleScreenUiState.newTaskTitle,
         category = buildScheduleScreenUiState.newTaskCategory,
-        description = buildScheduleScreenUiState.newTaskDescription,
+        description = if(buildScheduleScreenUiState.newTaskDescription == "") "" else buildScheduleScreenUiState.newTaskDescription,
         difficulty = buildScheduleScreenUiState.newTaskDifficulty,
         priority = buildScheduleScreenUiState.newTaskPriority,
         startAt = "",
