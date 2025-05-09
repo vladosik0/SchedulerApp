@@ -88,7 +88,6 @@ class TaskEditScreenViewModel (
     val saveTaskErrorMessage: StateFlow<String> = _saveTaskErrorMessage
 
     private val _isTaskValid = MutableStateFlow(taskId != null)
-    val isTaskValid: StateFlow<Boolean> = _isTaskValid
 
     private val _areTextFieldsValid = MutableStateFlow(false)
     val areTextFieldsValid: StateFlow<Boolean> = _areTextFieldsValid
@@ -114,10 +113,12 @@ class TaskEditScreenViewModel (
 
     fun updateStartTime(startTime: LocalTime) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(startTime = startTime)
+        checkStartTime()
     }
 
     fun updateFinishTime(finishTime: LocalTime) {
         _taskEditScreenUiState.value = _taskEditScreenUiState.value.copy(finishTime = finishTime)
+        checkFinishTime()
     }
 
     fun updatePriority(priority: Priority) {
@@ -137,58 +138,66 @@ class TaskEditScreenViewModel (
                 && !(category.length > 50 || category.isBlank())
     }
 
-    private suspend fun checkTaskValidation() {
-        validateTextFields()
-        var isValid = _areTextFieldsValid.value
-
+    private fun checkStartTime() {
         val startTime = _taskEditScreenUiState.value.startTime
         val finishTime = _taskEditScreenUiState.value.finishTime
         if (startTime.isAfter(finishTime) || startTime == finishTime) {
-            isValid = false
+            _isTaskValid.value = false
             _startTimeErrorMessage.value = "Start Time must be before Finish Time"
         } else {
             _startTimeErrorMessage.value = ""
+            _finishTimeErrorMessage.value = ""
         }
+    }
+
+    private fun checkFinishTime() {
+        val startTime = _taskEditScreenUiState.value.startTime
+        val finishTime = _taskEditScreenUiState.value.finishTime
         if (finishTime.isBefore(startTime) || finishTime == startTime) {
-            isValid = false
+            _isTaskValid.value = false
             _finishTimeErrorMessage.value = "Finish Time must be after Start Time"
         } else {
             _finishTimeErrorMessage.value = ""
+            _startTimeErrorMessage.value = ""
         }
+    }
 
+    private suspend fun checkTaskValidation() {
         val newTaskStartAt =
             _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.startTime)
         val newTaskFinishAt =
             _taskEditScreenUiState.value.date.atTime(_taskEditScreenUiState.value.finishTime)
 
-            val tasks =
-                tasksRepository.getTasksByDate(_taskEditScreenUiState.value.date.toString()).first()
+        val tasks =
+            tasksRepository.getTasksByDate(_taskEditScreenUiState.value.date.toString()).first()
 
-            val hasOverlap = tasks.any { task ->
-                val taskStartAt = LocalDateTime.parse(task.startAt)
-                val taskFinishAt = LocalDateTime.parse(task.finishAt)
-                newTaskStartAt < taskFinishAt && newTaskFinishAt > taskStartAt && task.id != taskId
-            }
+        val hasOverlap = tasks.any { task ->
+            val taskStartAt = LocalDateTime.parse(task.startAt)
+            val taskFinishAt = LocalDateTime.parse(task.finishAt)
+            newTaskStartAt < taskFinishAt && newTaskFinishAt > taskStartAt && task.id != taskId
+        }
 
-            if (hasOverlap) {
-                _saveTaskErrorMessage.value = "There are already tasks in this time interval!"
-                isValid = false
-            } else {
-                _saveTaskErrorMessage.value = ""
-            }
-            _isTaskValid.value = isValid
+        if (hasOverlap) {
+            _saveTaskErrorMessage.value = "There are already tasks in this time interval!"
+            _isTaskValid.value = false
+        } else {
+            _saveTaskErrorMessage.value = ""
+            _isTaskValid.value = true
+        }
+
     }
 
-    fun saveTask() {
-        viewModelScope.launch {
-            checkTaskValidation()
-            if(_isTaskValid.value) {
-                if (taskId != null) {
-                    tasksRepository.updateTask(_taskEditScreenUiState.value.toTask(taskId.toInt()))
-                } else {
-                    tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
-                }
+    suspend fun saveTask(): Boolean {
+        checkTaskValidation()
+        if (_isTaskValid.value) {
+            if (taskId != null) {
+                tasksRepository.updateTask(_taskEditScreenUiState.value.toTask(taskId.toInt()))
+            } else {
+                tasksRepository.insertTask(_taskEditScreenUiState.value.toTask())
             }
+            return true
+        } else {
+            return false
         }
     }
     //updateIsNotified

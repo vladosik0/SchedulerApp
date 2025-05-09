@@ -50,6 +50,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,6 +69,7 @@ import com.vladosik0.schedulerapp.domain.validators.isPeriodLogical
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -86,9 +88,9 @@ fun TaskEditScreen(
 
     val initialTask by viewModel.taskEditScreenUiState.collectAsState()
 
-    val isTaskValid by viewModel.isTaskValid.collectAsState()
-
     val topAppBarTitle = viewModel.topAppBarTitle
+
+    val coroutineScope = rememberCoroutineScope()
 
     var notificationsExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -122,8 +124,11 @@ fun TaskEditScreen(
             },
         ) { paddingValues ->
             Column(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .verticalScroll(rememberScrollState()).padding(paddingValues).padding(16.dp)
+                modifier = Modifier
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues)
+                    .padding(16.dp)
             ) {
                 OutlinedTextField(
                     value = initialTask.title,
@@ -135,7 +140,9 @@ fun TaskEditScreen(
                 Text(
                     text = "Max symbol limit: 50",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 4.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -150,7 +157,9 @@ fun TaskEditScreen(
                 Text(
                     text = "Max symbol limit: 250",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 4.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -166,7 +175,9 @@ fun TaskEditScreen(
                 Text(
                     text = "Max symbol limit: 50",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 4.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -230,7 +241,8 @@ fun TaskEditScreen(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .clickable { notificationsExpanded = !notificationsExpanded }) {
                     Text(
                         text = "Notifications",
@@ -277,22 +289,15 @@ fun TaskEditScreen(
                         Text("Cancel")
                     }
                     Button(
-                        enabled = areTextFieldsValid && startTimeErrorMessage== "" && finishTimeErrorMessage== "",
+                        enabled = areTextFieldsValid && startTimeErrorMessage == ""
+                                && finishTimeErrorMessage == "",
                         onClick = {
-                            viewModel.saveTask()
-                            if(isTaskValid) {
-                                Toast.makeText(
-                                    context,
-                                    "Task saved successfully",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                onCancel()
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "There are issues with input data",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                            coroutineScope.launch {
+                                val success = viewModel.saveTask()
+                                if (success) {
+                                    Toast.makeText(context, "Task saved successfully", Toast.LENGTH_SHORT).show()
+                                    onCancel()
+                                }
                             }
                         }) {
                         Text("Save")
@@ -331,11 +336,15 @@ fun DatePickerField(
                     .size(24.dp)
                     .clickable {
                         val datePicker = DatePickerDialog(
-                            context, { _, year, month, dayOfMonth ->
+                            context,
+                            { _, year, month, dayOfMonth ->
                                 val newDate = LocalDate.of(year, month + 1, dayOfMonth)
                                 text = newDate.format(formatter)
                                 onDateSelected(newDate)
-                            }, selectedDate.year, selectedDate.monthValue - 1, selectedDate.dayOfMonth
+                            },
+                            selectedDate.year,
+                            selectedDate.monthValue - 1,
+                            selectedDate.dayOfMonth
                         )
                         datePicker.show()
                     })
