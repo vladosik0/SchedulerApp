@@ -1,6 +1,5 @@
 package com.vladosik0.schedulerapp.presentation.view_models
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vladosik0.schedulerapp.data.local.repositories.TasksRepository
@@ -184,8 +183,12 @@ class SharedScheduleScreensViewModel(
     }
 
     fun updateStartActivityPeriodTime(startActivityTime: LocalTime) {
-        if (startActivityTime.isAfter(_buildScheduleScreenUiState.value.activityPeriodFinish)) {
+        if (startActivityTime.isAfter(_buildScheduleScreenUiState.value.activityPeriodFinish) ||
+            startActivityTime == _buildScheduleScreenUiState.value.activityPeriodFinish) {
             _startActivityPeriodErrorMessage.value = "Start Time must be before Finish Time!"
+            _buildScheduleScreenUiState.update { it.copy(
+                activityPeriodStart = startActivityTime
+            ) }
         } else {
             _buildScheduleScreenUiState.update { it.copy(
                 activityPeriodStart = startActivityTime,
@@ -197,11 +200,13 @@ class SharedScheduleScreensViewModel(
                 temporaryTasks = mutableListOf<TaskUiStateElement>()
             )
         }
-        Log.d("UI_DEBUG_START", "${_buildScheduleScreenUiState.value.activityPeriodStart}")
     }
 
     fun updateStartDesirablePeriodTime(startDesirableTime: LocalTime) {
-        if (startDesirableTime.isAfter(_buildScheduleScreenUiState.value.desirableExecutionPeriodFinish)) {
+        if (
+            startDesirableTime.isAfter(_buildScheduleScreenUiState.value.desirableExecutionPeriodFinish) ||
+            startDesirableTime == _buildScheduleScreenUiState.value.desirableExecutionPeriodFinish
+            ) {
             _startDesirablePeriodErrorMessage.value = "Start Desirable Time must be before Finish Desirable Time!"
         } else if (isDesirableIntervalWithinActivityInterval()) {
             _buildScheduleScreenUiState.update { it.copy(desirableExecutionPeriodStart = startDesirableTime) }
@@ -230,8 +235,14 @@ class SharedScheduleScreensViewModel(
     }
 
     fun updateFinishActivityPeriodTime(finishActivityTime: LocalTime) {
-        if (finishActivityTime.isBefore(_buildScheduleScreenUiState.value.activityPeriodStart)) {
+        if (
+            finishActivityTime.isBefore(_buildScheduleScreenUiState.value.activityPeriodStart) ||
+            finishActivityTime == _buildScheduleScreenUiState.value.activityPeriodStart
+            ) {
             _finishActivityPeriodErrorMessage.value = "Finish Time must be after Start Time!"
+            _buildScheduleScreenUiState.update { it.copy(
+                activityPeriodFinish = finishActivityTime
+            ) }
         } else {
             _buildScheduleScreenUiState.update { it.copy(
                 activityPeriodFinish = finishActivityTime,
@@ -243,11 +254,13 @@ class SharedScheduleScreensViewModel(
                 temporaryTasks = mutableListOf<TaskUiStateElement>()
             )
         }
-        Log.d("UI_DEBUG_FINISH", "${_buildScheduleScreenUiState.value.activityPeriodFinish}")
     }
 
     fun updateFinishDesirablePeriodTime(finishDesirableTime: LocalTime) {
-        if (finishDesirableTime.isBefore(_buildScheduleScreenUiState.value.desirableExecutionPeriodStart)) {
+        if (
+            finishDesirableTime.isBefore(_buildScheduleScreenUiState.value.desirableExecutionPeriodStart) ||
+            finishDesirableTime == _buildScheduleScreenUiState.value.desirableExecutionPeriodStart
+            ) {
             _startDesirablePeriodErrorMessage.value = "Finish Desirable Time must be after Start Desirable Time!"
         } else if (isDesirableIntervalWithinActivityInterval()) {
             _buildScheduleScreenUiState.update { it.copy(desirableExecutionPeriodFinish = finishDesirableTime) }
