@@ -14,11 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.vladosik0.schedulerapp.R
+import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
 
 
 @Composable
-fun StartAppScreen() {
+fun StartAppScreen(
+    navController: NavController
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.align(Alignment.Center),
@@ -30,10 +34,14 @@ fun StartAppScreen() {
                 contentDescription = "App logo",
                 modifier = Modifier.size(128.dp)
             )
-            Button(onClick = {}) {
+            Button(onClick = {
+                navController.navigate(NavigationRoutes.AuthScreen.createRoute("In"))
+            }) {
                 Text(text = "Sign In")
             }
-            OutlinedButton(onClick = {}) {
+            OutlinedButton(onClick = {
+                navController.navigate(NavigationRoutes.AuthScreen.createRoute("Up"))
+            }) {
                 Text(text = "Sign Up")
             }
 

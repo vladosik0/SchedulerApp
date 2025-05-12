@@ -4,6 +4,12 @@ import java.time.LocalDate
 
 sealed class NavigationRoutes(val route: String) {
 
+    object StartAppScreen : NavigationRoutes("start_app_screen")
+
+    object AuthScreen : NavigationRoutes("auth_screen/{type}") {
+        fun createRoute(type: String) = "auth_screen/$type"
+    }
+
     object DateScreen : NavigationRoutes("date_screen")
 
     object TaskDetailsScreen : NavigationRoutes("task_details_screen/{taskId}") {

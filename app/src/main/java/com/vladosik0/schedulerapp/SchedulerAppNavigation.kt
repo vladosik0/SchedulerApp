@@ -15,9 +15,11 @@ import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.navigation.NavigationRoutes
+import com.vladosik0.schedulerapp.presentation.screens.AuthScreen
 import com.vladosik0.schedulerapp.presentation.screens.BuildScheduleScreen
 import com.vladosik0.schedulerapp.presentation.screens.DateScreen
 import com.vladosik0.schedulerapp.presentation.screens.NewScheduleScreen
+import com.vladosik0.schedulerapp.presentation.screens.StartAppScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskDetailsScreen
 import com.vladosik0.schedulerapp.presentation.screens.TaskEditScreen
 import com.vladosik0.schedulerapp.presentation.view_models.SharedScheduleScreensViewModel
@@ -33,12 +35,29 @@ fun SchedulerAppNavigation() {
 
     AnimatedNavHost(
         navController = navController,
-        startDestination = NavigationRoutes.DateScreen.route,
+        startDestination = NavigationRoutes.StartAppScreen.route,
         enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(400)) },
         exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(400)) },
         popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(400)) },
         popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(400)) }
     ) {
+
+        composable(route = NavigationRoutes.StartAppScreen.route) {
+            StartAppScreen(navController)
+        }
+
+        composable(
+            route = NavigationRoutes.AuthScreen.route,
+            arguments = listOf(navArgument("type") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val authType = backStackEntry.arguments?.getString("type") ?: ""
+            AuthScreen(
+                buttonLabel = authType,
+                onBackIconClick = {navController.popBackStack()},
+                onAuthButtonClick = {navController.navigate(NavigationRoutes.DateScreen.route)}
+            )
+        }
+
         composable(route = NavigationRoutes.DateScreen.route) { DateScreen(navController) }
 
         composable(
