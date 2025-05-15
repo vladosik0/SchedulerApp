@@ -24,15 +24,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -58,14 +55,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vladosik0.schedulerapp.domain.enums.Difficulty
 import com.vladosik0.schedulerapp.domain.enums.Priority
 import com.vladosik0.schedulerapp.domain.formatters.toPrettyFormat
-import com.vladosik0.schedulerapp.domain.validators.isPeriodLogical
 import com.vladosik0.schedulerapp.presentation.AppViewModelProvider
 import com.vladosik0.schedulerapp.presentation.ui_state_converters.TaskEditScreenUiState
 import com.vladosik0.schedulerapp.presentation.view_models.TaskEditScreenViewModel
@@ -422,163 +417,58 @@ fun TimePickerField(
 }
 
 
-
 @Composable
 fun NotificationSettings(
-    startAt: LocalDateTime = LocalDateTime.now(),
-    finishAt: LocalDateTime = LocalDateTime.now(),
-    onPeriodicChange: (Int?) -> Unit = {},
     customTimes: List<LocalDateTime> = listOf<LocalDateTime>(),
     onAddCustomTime: (LocalDateTime) -> Unit = {},
     onRemoveCustomTime: (LocalDateTime) -> Unit = {}
 ) {
-    val units = listOf("Minutes", "Hours", "Days", "Weeks")
-    var selectedUnit by remember { mutableStateOf("Hours") }
-    var customValue by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedTime by remember { mutableStateOf<LocalTime?>(null) }
-    var customNotificationsExpanded by remember { mutableStateOf(false) }
-    var periodicNotificationsExpanded by remember { mutableStateOf(false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterLabel(
-            text = "Periodic Notifications",
-            expanded = periodicNotificationsExpanded
-        ) { periodicNotificationsExpanded = !periodicNotificationsExpanded}
-
-        AnimatedVisibility(visible = periodicNotificationsExpanded) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = customValue,
-                        onValueChange = { customValue = it },
-                        label = { Text("Value") },
-                        singleLine = true,
-                        modifier = Modifier.width(80.dp),
-                        isError = errorMessage != null,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                    DropdownMenuBox(
-                        options = units,
-                        selected = selectedUnit,
-                        onSelected = { selectedUnit = it })
-                }
-
-                if (errorMessage != null) {
-                    Text(
-                        errorMessage!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                Button(onClick = {
-                    val value = customValue.toIntOrNull()
-                    if (value == null || value <= 0) {
-                        errorMessage = "Enter a valid number"
-                    } else if (!isPeriodLogical(value, selectedUnit, startAt, finishAt)) {
-                        errorMessage = "Period exceeds task duration"
-                    } else {
-                        errorMessage = null
-                        val totalMinutes = when (selectedUnit) {
-                            "Minutes" -> value
-                            "Hours" -> value * 60
-                            "Days" -> value * 60 * 24
-                            "Weeks" -> value * 60 * 24 * 7
-                            else -> value
+        Column {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                customTimes.forEach { dateTime ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(dateTime.toString())
+                        IconButton(onClick = { onRemoveCustomTime(dateTime) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Remove")
                         }
-                        onPeriodicChange(totalMinutes)
                     }
-                }) {
-                    Text("Set Period")
                 }
             }
-        }
+            DatePickerField(
+                selectedDate = selectedDate ?: LocalDate.now(),
+                onDateSelected = { selectedDate = it })
 
-        FilterLabel(
-            text = "Custom Notifications",
-            expanded = customNotificationsExpanded
-        ) { customNotificationsExpanded = !customNotificationsExpanded}
-
-        AnimatedVisibility(visible = customNotificationsExpanded) {
-            Column {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    customTimes.forEach { dateTime ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(dateTime.toString())
-                            IconButton(onClick = { onRemoveCustomTime(dateTime) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Remove")
-                            }
-                        }
-                    }
-                }
-                DatePickerField(
-                    selectedDate = selectedDate ?: LocalDate.now(),
-                    onDateSelected = { selectedDate = it })
-
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
 //                TimePickerField(
 //                    label = "Notification",
 //                    selectedTime = selectedTime ?: LocalTime.now(),
 //                    onTimeSelected = { selectedTime = it })
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Button(
-                        onClick = {
-                            if (selectedDate != null && selectedTime != null) {
-                                onAddCustomTime(LocalDateTime.of(selectedDate!!, selectedTime!!))
-                                selectedDate = null
-                                selectedTime = null
-                            }
-                        }, enabled = selectedDate != null && selectedTime != null
-                    ) {
-                        Text("Add Custom Time")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DropdownMenuBox(
-    options: List<String>,
-    selected: String,
-    onSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        OutlinedButton(onClick = { expanded = true }) {
-            Text(selected)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
+            Box(
+                modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center
+            ) {
+                Button(
                     onClick = {
-                        onSelected(option)
-                        expanded = false
-                    }
-                )
+                        if (selectedDate != null && selectedTime != null) {
+                            onAddCustomTime(LocalDateTime.of(selectedDate!!, selectedTime!!))
+                            selectedDate = null
+                            selectedTime = null
+                        }
+                    }, enabled = selectedDate != null && selectedTime != null
+                ) {
+                    Text("Add Custom Time")
+                }
             }
         }
     }
