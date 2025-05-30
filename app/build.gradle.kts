@@ -82,9 +82,12 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.core)
+    androidTestImplementation(libs.core.ktx)
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(libs.junit.jupiter)
     // Kotlin Coroutines testing
     testImplementation(libs.kotlinx.coroutines.test)
     // Mocking
@@ -95,4 +98,5 @@ dependencies {
     testImplementation(libs.androidx.room.testing)
     // Truth
     testImplementation(libs.truth)
+    testImplementation(kotlin("test"))
 }

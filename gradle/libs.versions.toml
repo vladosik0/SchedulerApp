@@ -1,6 +1,8 @@
 [versions]
 accompanist-navigation-animation = "0.31.0-alpha"
 agp = "8.9.1"
+core = "1.6.1"
+junitJupiter = "5.11.4"
 kotlinx-coroutines-android = "1.7.1"
 kotlinxCoroutinesTest = "1.8.1"
 lifecycle-runtime-compose = "2.8.7"
@@ -14,7 +16,7 @@ serialization = "1.7.10"
 ksp = "2.0.21-1.0.25"
 kotlin = "2.0.21"
 coreKtx = "1.10.1"
-junit = "4.13.2"
+junit = "5.10.0"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 activityCompose = "1.8.0"
@@ -24,8 +26,10 @@ uiTextGoogleFonts = "1.7.8"
 
 [libraries]
 accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist-navigation-animation" }
+androidx-core = { module = "androidx.test:core", version.ref = "core" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "room-runtime" }
+core-ktx = { module = "androidx.test:core-ktx", version.ref = "core" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -38,6 +42,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room-runtime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room-runtime" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit2" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines-android" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
