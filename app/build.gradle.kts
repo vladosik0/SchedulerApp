@@ -85,4 +85,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // Kotlin Coroutines testing
+    testImplementation(libs.kotlinx.coroutines.test)
+    // Mocking
+    testImplementation(libs.mockk)
+    // Retrofit testing (with MockWebServer)
+    testImplementation(libs.mockwebserver)
+    // Room testing (in-memory DB)
+    testImplementation(libs.androidx.room.testing)
+    // Truth
+    testImplementation(libs.truth)
 }
