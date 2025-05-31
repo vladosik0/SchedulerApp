@@ -326,11 +326,3 @@ fun sortTasksAlgorithm(buildScheduleScreenUiState: BuildScheduleScreenUiState): 
 
     return finalSchedule.sortedBy { LocalDateTime.parse(it.startAt, formatter) }
 }
-
-
-
-
-
-
-
-
