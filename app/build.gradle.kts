@@ -78,7 +78,6 @@ dependencies {
     // Android activity lifecycle
     implementation(libs.androidx.lifecycle.runtime.compose)
     // Testing
-    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -88,6 +87,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.junit)
     // Kotlin Coroutines testing
     testImplementation(libs.kotlinx.coroutines.test)
     // Mocking
@@ -99,4 +99,7 @@ dependencies {
     // Truth
     testImplementation(libs.truth)
     testImplementation(kotlin("test"))
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }
